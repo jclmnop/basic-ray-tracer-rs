@@ -1,6 +1,6 @@
 mod render;
-mod vector;
 mod shapes;
+mod vector;
 
 pub use render::*;
 pub use vector::*;
@@ -15,7 +15,7 @@ mod tests {
     #[test]
     fn it_works() {
         let mut img = RgbaImage::new(640, 640);
-        let v = Vector::new(0.5 * 255.0, 255.0, 0.5 * 255.0);
+        let v = Vector::new(125, 255, 125);
         render(&mut img, &v);
         write_img(&img, &Path::new(TEST_PATH));
     }
