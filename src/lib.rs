@@ -1,15 +1,15 @@
-mod vector;
 mod render;
-mod sphere;
+mod vector;
+mod shapes;
 
-pub use vector::*;
 pub use render::*;
+pub use vector::*;
 
 #[cfg(test)]
 mod tests {
-    use std::path::Path;
-    use image::RgbaImage;
     use super::*;
+    use image::RgbaImage;
+    use std::path::Path;
     const TEST_PATH: &str = "./test.png";
 
     #[test]
