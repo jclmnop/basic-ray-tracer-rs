@@ -20,8 +20,6 @@ pub type Colour = Vector<u8>;
 pub type Vector3D = Vector<f64>;
 // pub type Index3D = Vector<usize>;
 
-// TODO: make generic over
-//       T: Copy + NumCast + Num + PartialOrd<Self> + Clone + Bounded
 #[derive(Default, Debug, Copy, Clone, PartialEq)]
 pub struct Vector<T: VectorNum> {
     pub x: T,
@@ -37,12 +35,16 @@ impl<T: VectorNum> Vector<T> {
     /// Magnitude of a Vector
     /// sqrt(x^2 + y^2 + z^2)
     pub fn magnitude(self) -> f64 {
-        let squared_vec = self * self;
+        let squared_vec = self.square();
         let square_sum: T = squared_vec.vec_sum();
         square_sum
             .to_f64()
             .unwrap_or_else(|| panic!("can't represent {square_sum} as f64"))
             .sqrt()
+    }
+
+    pub fn square(&self) -> Vector<T> {
+        Vector::new(self.x * self.x, self.y * self.y, self.z * self.z)
     }
 
     /// Sum of a Vector
@@ -52,7 +54,7 @@ impl<T: VectorNum> Vector<T> {
 
     /// Dot product of two Vectors
     pub fn dot(self, other: Self) -> T {
-        (self * other).vec_sum()
+        Vector::new(self.x * other.x, self.y * other.y, self.z * other.z).vec_sum()
     }
 
     pub fn to_f64(self) -> Vector<f64> {
@@ -82,9 +84,9 @@ impl<T: VectorNum> std::ops::Mul<Vector<T>> for Vector<T> {
     /// Cross product of two Vectors of same type
     fn mul(self, rhs: Vector<T>) -> Self::Output {
         Self {
-            x: self.x * rhs.x,
-            y: self.y * rhs.y,
-            z: self.z * rhs.z,
+            x: (self.y * rhs.z) - (self.z * rhs.y),
+            y: (self.z * rhs.x) - (self.x * rhs.z),
+            z: (self.x * rhs.y) - (self.y * rhs.x),
         }
     }
 }
@@ -142,7 +144,7 @@ mod tests {
     fn cross_product() {
         let v1 = Vector::new(3.0, 5.0, 2.0);
         let v2 = Vector::new(2.0, 4.0, 6.0);
-        assert_eq!(v1 * v2, Vector::new(6.0, 20.0, 12.0));
+        assert_eq!(v1 * v2, Vector::new(22.0, -14.0, 2.0));
     }
 
     #[test]
@@ -177,5 +179,18 @@ mod tests {
         let v1 = Vector::new(1, 3, 4);
         let v2 = v1.to_f64();
         assert_eq!(v2, Vector::new(1.0, 3.0, 4.0));
+    }
+
+    #[test]
+    fn magnitude_works() {
+        let v = Vector::new(0.0, 0.0, 3.0);
+        assert_eq!(v.magnitude(), 3.0);
+    }
+
+    #[test]
+    fn dot_product() {
+        let v1 = Vector::new(1.0, 2.0, 3.0);
+        let v2 = Vector::new(1.0, 5.0, 7.0);
+        assert_eq!(v1.dot(v2), 32.0);
     }
 }

@@ -14,15 +14,16 @@ pub struct Camera {
 //       e.g. when moving camera up, we don't want to go straight up the
 //            y-axis, instead we want to move up in a way that we're rotating
 //            around the view_reference_point (0, 0, 0)
-//       do i just need to add/subtract from the VUV and/or VRV?
 impl Camera {
     /// Create a new `Camera` facing the origin (0, 0, 0)
     pub fn new(view_reference_point: Point, approx_view_up_vector: Vector3D, scale: f64) -> Self {
         let look_at = Point::new(0.0, 0.0, 0.0);
         let mut view_plane_normal = (look_at - view_reference_point).to_f64();
         view_plane_normal.normalise();
-        let mut view_right_vector = approx_view_up_vector * view_plane_normal;
+
+        let mut view_right_vector = view_plane_normal * approx_view_up_vector;
         view_right_vector.normalise();
+
         let mut view_up_vector = view_right_vector * view_plane_normal;
         view_up_vector.normalise();
 
@@ -32,8 +33,28 @@ impl Camera {
             view_plane_normal,
             view_up_vector,
             view_right_vector,
-            scale
+            scale,
         }
+    }
+
+    pub fn vrp(&self) -> Point {
+        self.view_reference_point
+    }
+
+    pub fn vpn(&self) -> Vector3D {
+        self.view_plane_normal
+    }
+
+    pub fn vuv(&self) -> Vector3D {
+        self.view_up_vector
+    }
+
+    pub fn vrv(&self) -> Vector3D {
+        self.view_right_vector
+    }
+
+    pub fn scale(&self) -> f64 {
+        self.scale
     }
 
     /// Move camera along the x-axis
@@ -50,8 +71,23 @@ impl Camera {
     pub fn move_z(&mut self, delta: i64) {
         todo!()
     }
+}
 
-    pub fn scale(&self) -> f64 {
-        self.scale
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn camera_created_with_correct_values() {
+        let vrp = Point::new(0.0, 0.0, -3.0);
+        let vuv = Vector3D::new(0.0, 1.0, 0.0);
+        let camera = Camera::new(vrp, vuv, 1.0);
+
+        assert_eq!(camera.vrp(), vrp);
+        assert_eq!(camera.look_at, Point::new(0.0, 0.0, 0.0));
+        assert_eq!(camera.vpn(), Vector3D::new(0.0, 0.0, 1.0));
+        assert_eq!(camera.scale(), 1.0);
+        assert_eq!(camera.vrv(), Vector3D::new(-1.0, 0.0, 0.0));
+        assert_eq!(camera.vuv(), vuv);
     }
 }
