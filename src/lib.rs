@@ -1,9 +1,13 @@
+mod camera;
 mod render;
 mod shapes;
 mod vector;
+mod ray;
 
+pub use camera::*;
 pub use render::*;
 pub use vector::*;
+pub use ray::*;
 
 #[cfg(test)]
 mod tests {
