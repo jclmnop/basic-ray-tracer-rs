@@ -7,6 +7,8 @@ use std::path::Path;
 
 const BACKGROUND: Colour = Colour { x: 0, y: 0, z: 0 };
 
+//TODO: replace orthogonal ray tracing (and scaling etc) with perspective raytracing
+
 //TODO: render with GDK pixbuf instead (use Relm4?)
 pub fn render(img: &mut RgbaImage, camera: &Camera, shapes: Vec<&dyn Shape>) {
     for (j, row) in img.enumerate_rows_mut() {
@@ -26,10 +28,10 @@ pub fn write_img(img: &RgbaImage, path: &Path) {
 }
 
 fn calculate_pixel_colour(i: usize, j: u32, camera: &Camera, shapes: &Vec<&dyn Shape>) -> Colour {
-    let origin = image_space_point(i, j, &camera);
+    let (origin, direction) = camera.screen[j as usize][i];
     let ray = Ray {
         origin,
-        direction: camera.vpn(),
+        direction,
     };
     let intersections = shapes
         .iter()

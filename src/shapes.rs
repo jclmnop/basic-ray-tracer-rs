@@ -39,7 +39,7 @@ impl Shape for Sphere {
         let v = ray.origin - self.center;
         let a = ray.direction.dot(&ray.direction);
         let b = 2.0 * (v.dot(&ray.direction));
-        let c = v.dot(&v) - (self.radius * self.radius);
+        let c = v.dot(&v) - (self.radius * self.radius); //* self.scale(ray));
         if let Some(t) = solve_t(a, b, c) {
             Some(Intersection(ray.get_point(t), self.colour))
         } else {
@@ -61,10 +61,10 @@ impl Shape for Sphere {
         let adjusted_distance = Point::new(
             distance.x * ray_direction.x,
             distance.y * ray_direction.y,
-            distance.z * ray_direction.z
+            distance.z * ray_direction.z,
         );
-        let mut scale = 1.0 / (adjusted_distance.magnitude() / 1000.0);
-        if scale > 1.0 || scale < 0.0 {
+        let mut scale = 250.0 / adjusted_distance.magnitude();
+        if scale < 0.0 {
             scale = 0.0;
         }
         scale
