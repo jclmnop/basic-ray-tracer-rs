@@ -6,19 +6,12 @@ pub trait VectorNum:
 {
 }
 
-impl VectorNum for usize {}
 impl VectorNum for u8 {}
-// impl VectorNum for u32 {}
-// impl VectorNum for u64 {}
-impl VectorNum for i32 {}
-impl VectorNum for i64 {}
-// impl VectorNum for f32 {}
 impl VectorNum for f64 {}
 
 pub type Point = Vector<f64>;
 pub type Colour = Vector<u8>;
 pub type Vector3D = Vector<f64>;
-// pub type Index3D = Vector<usize>;
 
 #[derive(Default, Debug, Copy, Clone, PartialEq)]
 pub struct Vector<T: VectorNum> {

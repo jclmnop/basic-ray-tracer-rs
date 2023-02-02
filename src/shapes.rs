@@ -4,10 +4,11 @@ use std::cmp::Ordering;
 #[derive(Copy, Clone)]
 pub struct Intersection(pub Point, pub Colour);
 
-pub trait Shape {
+pub trait Shape: Sync {
     fn intersection(&self, ray: &Ray) -> Option<Intersection>;
 }
 
+#[derive(Copy, Clone)]
 pub struct Sphere {
     pub center: Point,
     pub radius: f64,
