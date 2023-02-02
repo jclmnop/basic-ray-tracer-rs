@@ -1,11 +1,20 @@
-use crate::{Colour, Point, Ray};
+use crate::{Camera, Colour, Point, Ray, Vector3D};
 use std::cmp::Ordering;
 
 #[derive(Copy, Clone)]
 pub struct Intersection(pub Point, pub Colour);
 
 pub trait Shape: Sync {
+    /// Calculate where the closes intersection between a ray and the surface of a
+    /// shape is, relative to the origin of the ray, if it exists
     fn intersection(&self, ray: &Ray) -> Option<Intersection>;
+
+    /// Calculate the surface normal for a point on the shape, normalised to
+    /// a unit vector
+    fn surface_normal(&self, point: &Point) -> Vector3D;
+
+    /// Scale the object depending on its distance from camera
+    fn scale(&self, ray: &Ray) -> f64;
 }
 
 #[derive(Copy, Clone)]
@@ -28,14 +37,37 @@ impl Sphere {
 impl Shape for Sphere {
     fn intersection(&self, ray: &Ray) -> Option<Intersection> {
         let v = ray.origin - self.center;
-        let a = ray.direction.dot(ray.direction);
-        let b = 2.0 * (v.dot(ray.direction));
-        let c = v.dot(v) - (self.radius * self.radius);
+        let a = ray.direction.dot(&ray.direction);
+        let b = 2.0 * (v.dot(&ray.direction));
+        let c = v.dot(&v) - (self.radius * self.radius);
         if let Some(t) = solve_t(a, b, c) {
             Some(Intersection(ray.get_point(t), self.colour))
         } else {
             None
         }
+    }
+
+    fn surface_normal(&self, point: &Point) -> Vector3D {
+        let mut surface_normal = *point - self.center;
+        surface_normal.normalise();
+
+        surface_normal
+    }
+
+    fn scale(&self, ray: &Ray) -> f64 {
+        let ray_direction = ray.direction;
+        let ray_origin = ray.origin;
+        let distance = self.center - ray_origin;
+        let adjusted_distance = Point::new(
+            distance.x * ray_direction.x,
+            distance.y * ray_direction.y,
+            distance.z * ray_direction.z
+        );
+        let mut scale = 1.0 / (adjusted_distance.magnitude() / 1000.0);
+        if scale > 1.0 || scale < 0.0 {
+            scale = 0.0;
+        }
+        scale
     }
 }
 

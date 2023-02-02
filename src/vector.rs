@@ -36,6 +36,7 @@ impl<T: VectorNum> Vector<T> {
             .sqrt()
     }
 
+    /// Square the values inside a vector
     pub fn square(&self) -> Vector<T> {
         Vector::new(self.x * self.x, self.y * self.y, self.z * self.z)
     }
@@ -46,7 +47,7 @@ impl<T: VectorNum> Vector<T> {
     }
 
     /// Dot product of two Vectors
-    pub fn dot(self, other: Self) -> T {
+    pub fn dot(self, other: &Self) -> T {
         Vector::new(self.x * other.x, self.y * other.y, self.z * other.z).vec_sum()
     }
 
@@ -68,6 +69,12 @@ impl Vector<f64> {
             self.y /= magnitude;
             self.z /= magnitude;
         }
+    }
+
+    /// Calculate the cosine of the degree between two vectors
+    pub fn cosine_angle(&self, other: &Vector<f64>) -> f64 {
+        // 9.0 is the product of both vector lengths
+        self.dot(other) / 9.0
     }
 }
 
@@ -184,6 +191,6 @@ mod tests {
     fn dot_product() {
         let v1 = Vector::new(1.0, 2.0, 3.0);
         let v2 = Vector::new(1.0, 5.0, 7.0);
-        assert_eq!(v1.dot(v2), 32.0);
+        assert_eq!(v1.dot(&v2), 32.0);
     }
 }

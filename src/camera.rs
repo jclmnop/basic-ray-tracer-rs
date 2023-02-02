@@ -6,7 +6,6 @@ pub struct Camera {
     view_plane_normal: Vector3D,
     view_up_vector: Vector3D,
     view_right_vector: Vector3D,
-    scale: f64,
 }
 
 // TODO: figure out how to move along x/y/z axes relative to the current
@@ -16,7 +15,7 @@ pub struct Camera {
 //            around the view_reference_point (0, 0, 0)
 impl Camera {
     /// Create a new `Camera` facing the origin (0, 0, 0)
-    pub fn new(view_reference_point: Point, approx_view_up_vector: Vector3D, scale: f64) -> Self {
+    pub fn new(view_reference_point: Point, approx_view_up_vector: Vector3D) -> Self {
         let look_at = Point::new(0.0, 0.0, 0.0);
         let mut view_plane_normal = (look_at - view_reference_point).to_f64();
         view_plane_normal.normalise();
@@ -33,7 +32,6 @@ impl Camera {
             view_plane_normal,
             view_up_vector,
             view_right_vector,
-            scale,
         }
     }
 
@@ -51,10 +49,6 @@ impl Camera {
 
     pub fn vrv(&self) -> Vector3D {
         self.view_right_vector
-    }
-
-    pub fn scale(&self) -> f64 {
-        self.scale
     }
 
     /// Move camera along the x-axis
@@ -81,12 +75,11 @@ mod tests {
     fn camera_created_with_correct_values() {
         let vrp = Point::new(0.0, 0.0, -3.0);
         let vuv = Vector3D::new(0.0, 1.0, 0.0);
-        let camera = Camera::new(vrp, vuv, 1.0);
+        let camera = Camera::new(vrp, vuv);
 
         assert_eq!(camera.vrp(), vrp);
         assert_eq!(camera.look_at, Point::new(0.0, 0.0, 0.0));
         assert_eq!(camera.vpn(), Vector3D::new(0.0, 0.0, 1.0));
-        assert_eq!(camera.scale(), 1.0);
         assert_eq!(camera.vrv(), Vector3D::new(-1.0, 0.0, 0.0));
         assert_eq!(camera.vuv(), vuv);
     }

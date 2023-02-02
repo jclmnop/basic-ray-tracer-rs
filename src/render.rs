@@ -15,7 +15,6 @@ pub fn render(img: &mut RgbaImage, camera: &Camera, shapes: Vec<&dyn Shape>) {
             .into_par_iter()
             .for_each(|(i, px)| {
                 let new_colour = calculate_pixel_colour(i, j, camera, &shapes);
-
                 px.2 .0 = [new_colour.x, new_colour.y, new_colour.z, 255];
             });
     }
@@ -72,8 +71,8 @@ fn image_space_point(i: usize, j: u32, camera: &Camera) -> Point {
     let width = IMG_WIDTH as f64;
     let height = IMG_HEIGHT as f64;
 
-    let u = (i - width / 2.0) * camera.scale();
-    let v = ((height - j) - height / 2.0) * camera.scale();
+    let u = (i - width / 2.0);
+    let v = ((height - j) - height / 2.0);
 
     camera.vrp() + (camera.vrv() * u) + (camera.vuv() * v)
 }

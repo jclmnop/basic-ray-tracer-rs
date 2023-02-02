@@ -10,8 +10,8 @@ pub use render::*;
 pub use vector::*;
 
 // Image parameters TODO: ImageParam struct
-pub const IMG_HEIGHT: u32 = 1000;
-pub const IMG_WIDTH: u32 = 1000;
+pub const IMG_HEIGHT: u32 = 640;
+pub const IMG_WIDTH: u32 = 640;
 
 // Test scale
 
@@ -69,14 +69,47 @@ mod tests {
         colour: COLOUR3,
     };
 
-    const TEST_SPHERES: &[Sphere] = &[TEST_SPHERE, TEST_SPHERE2, TEST_SPHERE3];
+    const C4: Point = Point {
+        x: -55.0,
+        y: 200.0,
+        z: 0.0,
+    };
+    const R4: f64 = 50.0;
+    const COLOUR4: Colour = Colour {
+        x: 200,
+        y: 200,
+        z: 200,
+    };
+    const TEST_SPHERE4: Sphere = Sphere {
+        center: C4,
+        radius: R4,
+        colour: COLOUR4,
+    };
+
+    const C5: Point = Point {
+        x: 55.0,
+        y: 200.0,
+        z: 200.0,
+    };
+    const R5: f64 = 50.0;
+    const COLOUR5: Colour = Colour {
+        x: 255,
+        y: 255,
+        z: 255,
+    };
+    const TEST_SPHERE5: Sphere = Sphere {
+        center: C5,
+        radius: R5,
+        colour: COLOUR5,
+    };
+
+    const TEST_SPHERES: &[Sphere] = &[TEST_SPHERE, TEST_SPHERE2, TEST_SPHERE3, TEST_SPHERE4, TEST_SPHERE5];
 
     #[test]
     fn it_works() {
         let test_camera = Camera::new(
             Point::new(0.0, 0.0, -300.0),
             Vector3D::new(0.0, 1.0, 0.0),
-            SCALE,
         );
 
         let mut test_shapes: Vec<&dyn Shape> = Vec::new();
