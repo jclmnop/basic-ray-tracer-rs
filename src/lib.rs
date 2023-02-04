@@ -48,7 +48,7 @@ mod tests {
     fn it_works() {
         set_global_rayon_threads(NUM_THREADS);
         let light_source: LightSource = LightSource {
-            position: Point::new(300.0, 200.0, 600.0),
+            position: Point::new(250.0, 250.0, -200.0),
             colour: LightColour::new(1.0, 1.0, 1.0),
         };
         let colour = PixelColour::new(26, 179, 249);
@@ -61,13 +61,13 @@ mod tests {
             light_source,
         );
         let material2 = Material::new(
-            colour2.to_light_colour() * 0.15,
+            colour2.to_light_colour() * 0.2,
             colour2.to_light_colour(),
             colour2.to_light_colour(),
             light_source,
         );
         let material3 = Material::new(
-            colour3.to_light_colour() * 0.1,
+            colour3.to_light_colour() * 0.2,
             colour3.to_light_colour(),
             colour3.to_light_colour(),
             light_source,
@@ -75,8 +75,8 @@ mod tests {
         let radius: f64 = 50.0;
 
         let sphere1 = Sphere::new(Point::new(0.0, 0.0, 0.0), radius, material);
-        let sphere2 = Sphere::new(Point::new(0.0, 80.0, 100.0), radius, material2);
-        let sphere3 = Sphere::new(Point::new(0.0, 180.0, 200.0), radius, material3);
+        let sphere2 = Sphere::new(Point::new(50.0, 50.0, 100.0), radius, material2);
+        let sphere3 = Sphere::new(Point::new(100.0, 100.0, 200.0), radius, material3);
 
         let mut test_shapes: Vec<&dyn Shape> = Vec::new();
         test_shapes.push(&sphere1);
@@ -84,8 +84,8 @@ mod tests {
         test_shapes.push(&sphere3);
 
         let camera_params = CameraParams {
-            view_reference_point: Point::new(0.0, 0.0, -300.0),
-            approx_view_up_vector: Vector3D::new(1.0, 1.0, 0.0),
+            view_reference_point: Point::new(0.0, 0.0, -200.0),
+            approx_view_up_vector: Vector3D::new(0.0, 1.0, 0.0),
             focal_length: 200.0,
             img_height: IMG_HEIGHT as usize,
             img_width: IMG_WIDTH as usize,

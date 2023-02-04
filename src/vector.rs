@@ -1,4 +1,3 @@
-use num::traits::SaturatingAdd;
 use num::{Bounded, Num, NumCast, ToPrimitive};
 use std::fmt::{Display, Formatter};
 

@@ -133,14 +133,16 @@ impl Camera {
         let width = self.img_width as f64;
         let height = self.img_height as f64;
 
-        let u = i - width / 2.0;
+        // TODO: I had to invert both of these so that +x is to the right, and
+        //       +y is up, what am I doing wrong?
+        let u = (width - i) - width / 2.0;
         let v = (height - j) - height / 2.0;
 
         *screen_center_point + (self.vrv() * u * self.scale) + (self.vuv() * v * self.scale)
     }
 
     fn calc_pixel_direction(&self, pixel_point: &Point) -> Vector3D {
-        *pixel_point - self.view_reference_point
+        self.view_reference_point - *pixel_point
     }
 }
 
