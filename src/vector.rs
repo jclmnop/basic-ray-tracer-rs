@@ -1,3 +1,4 @@
+use num::traits::SaturatingAdd;
 use num::{Bounded, Num, NumCast, ToPrimitive};
 use std::fmt::{Display, Formatter};
 
@@ -9,9 +10,23 @@ pub trait VectorNum:
 impl VectorNum for u8 {}
 impl VectorNum for f64 {}
 
+/// Represents a point in 3D space
 pub type Point = Vector<f64>;
-pub type Colour = Vector<u8>;
+/// Represents RGB<u8> value for a pixel
+pub type PixelColour = Vector<u8>;
+/// Usually represents a direction in 3D space, can be a regular vector or can
+/// be a unit vector.
 pub type Vector3D = Vector<f64>;
+/// Represents the colour of a light source/ray.
+/// Range from 0.0 to 1.0
+pub type LightColour = Vector<f64>;
+
+#[derive(Clone, Copy)]
+pub enum ColourChannel {
+    Red,
+    Green,
+    Blue,
+}
 
 #[derive(Default, Debug, Copy, Clone, PartialEq)]
 pub struct Vector<T: VectorNum> {
@@ -23,6 +38,14 @@ pub struct Vector<T: VectorNum> {
 impl<T: VectorNum> Vector<T> {
     pub fn new(x: T, y: T, z: T) -> Self {
         Self { x, y, z }
+    }
+
+    pub fn from_array(a: [T; 3]) -> Self {
+        Self::new(a[0], a[1], a[2])
+    }
+
+    pub fn to_array(&self) -> [T; 3] {
+        [self.x, self.y, self.z]
     }
 
     /// Magnitude of a Vector
@@ -51,12 +74,46 @@ impl<T: VectorNum> Vector<T> {
         Vector::new(self.x * other.x, self.y * other.y, self.z * other.z).vec_sum()
     }
 
+    /// Multiply two vectors of same type by their values
+    /// Note: This is not the cross product
+    pub fn mul(&self, rhs: &Self) -> Vector<T> {
+        Vector::new(self.x * rhs.x, self.y * rhs.y, self.z * rhs.y)
+    }
+
+    pub fn colour(&self, colour_channel: &ColourChannel) -> T {
+        match colour_channel {
+            ColourChannel::Red => self.x,
+            ColourChannel::Green => self.y,
+            ColourChannel::Blue => self.z,
+        }
+    }
+
     pub fn to_f64(self) -> Vector<f64> {
         Vector {
             x: self.x.to_f64().unwrap(),
             y: self.y.to_f64().unwrap(),
             z: self.z.to_f64().unwrap(),
         }
+    }
+}
+
+//TODO: u8 -> f64 for calculations more efficient?
+//      or f64 -> u8 for pixels more efficient?
+impl Vector<u8> {
+    pub fn from_light_colour(light_colour: &LightColour) -> Self {
+        PixelColour::from_array([
+            (light_colour.x * 255.0) as u8,
+            (light_colour.y * 255.0) as u8,
+            (light_colour.z * 255.0) as u8,
+        ])
+    }
+
+    pub fn to_light_colour(&self) -> LightColour {
+        LightColour::from_array([
+            self.x as f64 / 255.0,
+            self.y as f64 / 255.0,
+            self.z as f64 / 255.0,
+        ])
     }
 }
 
@@ -104,11 +161,25 @@ impl<T: VectorNum> std::ops::Mul<T> for Vector<T> {
     }
 }
 
-impl<T: VectorNum> std::ops::Add<Vector<T>> for Vector<T> {
-    type Output = Vector<T>;
+impl std::ops::Add<Vector<u8>> for Vector<u8> {
+    type Output = Vector<u8>;
 
-    /// Add two Vectors of same type
-    fn add(self, rhs: Vector<T>) -> Self::Output {
+    /// Add two Vector<u8>
+    /// Saturates at T.max_value()
+    fn add(self, rhs: Vector<u8>) -> Self::Output {
+        Self {
+            x: self.x.saturating_add(rhs.x),
+            y: self.y.saturating_add(rhs.y),
+            z: self.z.saturating_add(rhs.z),
+        }
+    }
+}
+
+impl std::ops::Add<Vector<f64>> for Vector<f64> {
+    type Output = Vector<f64>;
+
+    /// Add two Vector<f64>
+    fn add(self, rhs: Vector<f64>) -> Self::Output {
         Self {
             x: self.x + rhs.x,
             y: self.y + rhs.y,

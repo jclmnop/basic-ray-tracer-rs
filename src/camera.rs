@@ -1,3 +1,4 @@
+#![allow(dead_code, unused_variables)]
 use crate::{Point, Vector3D};
 
 pub struct Camera {
@@ -6,7 +7,7 @@ pub struct Camera {
     view_plane_normal: Vector3D, // use to calc position of center pixel in "screen"
     view_up_vector: Vector3D,
     view_right_vector: Vector3D,
-    focal_length:f64,
+    focal_length: f64,
     pub screen: Vec<Vec<(Point, Vector3D)>>,
     img_height: usize,
     img_width: usize,
@@ -19,7 +20,7 @@ pub struct CameraParams {
     pub focal_length: f64,
     pub img_height: usize,
     pub img_width: usize,
-    pub scale: f64
+    pub scale: f64,
 }
 
 // TODO: figure out how to move along x/y/z axes relative to the current
@@ -106,9 +107,7 @@ impl Camera {
     fn setup_screen(&mut self) {
         let distance_from_projection_point = self.view_plane_normal * self.focal_length;
         let screen_center_point = self.view_reference_point + distance_from_projection_point;
-        // let mut screen: Vec<Vec<(Point, Vector3D)>> = Vec::with_capacity(self.img_height);
         for j in 0..self.screen.capacity() {
-            // let mut row: Vec<(Point, Vector3D)> = Vec::with_capacity(self.img_width);
             self.screen[j].clear();
             for i in 0..self.screen[j].capacity() {
                 let pixel_props = self.calc_pixel_props(i, j, &screen_center_point);
@@ -117,7 +116,12 @@ impl Camera {
         }
     }
 
-    fn calc_pixel_props(&self, i: usize, j: usize, screen_center_point: &Point) -> (Point, Vector3D) {
+    fn calc_pixel_props(
+        &self,
+        i: usize,
+        j: usize,
+        screen_center_point: &Point,
+    ) -> (Point, Vector3D) {
         let pixel_point = self.calc_pixel_point(i, j, screen_center_point);
         let pixel_direction = self.calc_pixel_direction(&pixel_point);
         (pixel_point, pixel_direction)
@@ -129,8 +133,8 @@ impl Camera {
         let width = self.img_width as f64;
         let height = self.img_height as f64;
 
-        let u = (i - width / 2.0);
-        let v = ((height - j) - height / 2.0);
+        let u = i - width / 2.0;
+        let v = (height - j) - height / 2.0;
 
         *screen_center_point + (self.vrv() * u * self.scale) + (self.vuv() * v * self.scale)
     }
@@ -142,8 +146,8 @@ impl Camera {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-
+    // use super::*;
+    //
     // #[test]
     // fn camera_created_with_correct_values() {
     //     let vrp = Point::new(0.0, 0.0, -3.0);
