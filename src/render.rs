@@ -17,7 +17,8 @@ pub fn render(img: &mut RgbaImage, camera: &Camera, shapes: &Vec<&dyn Shape>) {
                 // .par_bridge()
                 // .into_par_iter()
                 .for_each(|(i, px)| {
-                    let new_colour = calculate_pixel_colour(i, j, camera, &shapes);
+                    let new_colour =
+                        calculate_pixel_colour(i, j, camera, &shapes);
                     px.2 .0 = [new_colour.x, new_colour.y, new_colour.z, 255];
                 });
         })
@@ -59,8 +60,10 @@ fn closest_intersect<'a>(
             if closest.is_none() {
                 closest = Some(intersection);
             } else {
-                let closest_distance = (*origin - closest.unwrap().point()).magnitude().abs();
-                let this_distance = (*origin - intersection.point()).magnitude().abs();
+                let closest_distance =
+                    (*origin - closest.unwrap().point()).magnitude().abs();
+                let this_distance =
+                    (*origin - intersection.point()).magnitude().abs();
                 closest = match closest_distance.total_cmp(&this_distance) {
                     Ordering::Greater => Some(intersection),
                     _ => closest,

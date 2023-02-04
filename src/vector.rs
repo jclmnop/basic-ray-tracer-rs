@@ -2,7 +2,14 @@ use num::{Bounded, Num, NumCast, ToPrimitive};
 use std::fmt::{Display, Formatter};
 
 pub trait VectorNum:
-    Copy + NumCast + Num + PartialOrd<Self> + Clone + Bounded + Display + ToPrimitive
+    Copy
+    + NumCast
+    + Num
+    + PartialOrd<Self>
+    + Clone
+    + Bounded
+    + Display
+    + ToPrimitive
 {
 }
 
@@ -70,7 +77,8 @@ impl<T: VectorNum> Vector<T> {
 
     /// Dot product of two Vectors
     pub fn dot(self, other: &Self) -> T {
-        Vector::new(self.x * other.x, self.y * other.y, self.z * other.z).vec_sum()
+        Vector::new(self.x * other.x, self.y * other.y, self.z * other.z)
+            .vec_sum()
     }
 
     /// Multiply two vectors of same type by their values
@@ -132,6 +140,14 @@ impl Vector<f64> {
         // 9.0 is the product of both vector lengths
         self.dot(other) / 9.0
     }
+
+    pub fn invert(&self) -> Vector<f64> {
+        Self::new(
+            if self.x != 0.0 { 1.0 / self.x } else { 0.0 },
+            if self.y != 0.0 { 1.0 / self.y } else { 0.0 },
+            if self.z != 0.0 { 1.0 / self.z } else { 0.0 },
+        )
+    }
 }
 
 impl<T: VectorNum> std::ops::Mul<Vector<T>> for Vector<T> {
@@ -156,6 +172,32 @@ impl<T: VectorNum> std::ops::Mul<T> for Vector<T> {
             x: self.x * rhs,
             y: self.y * rhs,
             z: self.z * rhs,
+        }
+    }
+}
+
+impl<T: VectorNum> std::ops::Div<Vector<T>> for Vector<T> {
+    type Output = Self;
+
+    /// Value division of two vectors
+    fn div(self, rhs: Vector<T>) -> Self::Output {
+        Self {
+            x: self.x / rhs.x,
+            y: self.y / rhs.y,
+            z: self.z / rhs.z,
+        }
+    }
+}
+
+impl<T: VectorNum> std::ops::Div<T> for Vector<T> {
+    type Output = Self;
+
+    /// Scalar division of a vector
+    fn div(self, rhs: T) -> Self::Output {
+        Self {
+            x: self.x / rhs,
+            y: self.y / rhs,
+            z: self.z / rhs,
         }
     }
 }
@@ -196,6 +238,19 @@ impl<T: VectorNum> std::ops::Sub<Vector<T>> for Vector<T> {
             x: self.x - rhs.x,
             y: self.y - rhs.y,
             z: self.z - rhs.z,
+        }
+    }
+}
+
+impl<T: VectorNum> std::ops::Sub<T> for Vector<T> {
+    type Output = Vector<T>;
+
+    /// Subtract a scalar from a vector
+    fn sub(self, rhs: T) -> Self::Output {
+        Self {
+            x: self.x - rhs,
+            y: self.y - rhs,
+            z: self.z - rhs,
         }
     }
 }

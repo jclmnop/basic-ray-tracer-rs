@@ -71,8 +71,10 @@ fn solve_t(a: f64, b: f64, c: f64) -> Option<f64> {
         Ordering::Less => None,
         Ordering::Equal => Some((-b) / (2.0 * a)),
         Ordering::Greater => {
-            let plus_solution = ((-b) + (b * b - 4.0 * a * c).sqrt()) / (2.0 * a);
-            let minus_solution = ((-b) - (b * b - 4.0 * a * c).sqrt()) / (2.0 * a);
+            let plus_solution =
+                ((-b) + (b * b - 4.0 * a * c).sqrt()) / (2.0 * a);
+            let minus_solution =
+                ((-b) - (b * b - 4.0 * a * c).sqrt()) / (2.0 * a);
             Some(plus_solution.max(minus_solution))
         }
     }
