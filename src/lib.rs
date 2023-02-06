@@ -6,13 +6,15 @@ mod shapes;
 mod vector;
 
 pub use camera::*;
+use image::RgbaImage;
 pub use lighting::*;
 pub use material::*;
 pub use render::*;
+pub use shapes::*;
 pub use vector::*;
 
 // Image parameters TODO: ImageParam struct
-pub const IMG_SIZE: u32 = 1000;
+pub const IMG_SIZE: u32 = 640;
 pub const IMG_HEIGHT: u32 = IMG_SIZE;
 pub const IMG_WIDTH: u32 = IMG_SIZE;
 
@@ -24,6 +26,13 @@ pub fn set_global_rayon_threads(n: usize) {
         .num_threads(n)
         .build_global()
         .unwrap();
+}
+
+pub fn black_img(img: &mut RgbaImage) {
+    img.pixels_mut().for_each(|mut p| {
+        let black = PixelColour::default();
+        p.0 = [black.x, black.y, black.z, 255];
+    });
 }
 
 #[macro_export]
@@ -40,7 +49,10 @@ macro_rules! timeit {
 mod tests {
     use super::*;
     use crate::shapes::{Shape, Sphere};
-    use image::RgbaImage;
+    use gtk::gdk_pixbuf::{Colorspace, Pixbuf};
+    use gtk::prelude::*;
+    use image::EncodableLayout;
+    use image::{Rgba, RgbaImage};
     use std::path::Path;
 
     const TEST_PATH: &str = "./test.png";
@@ -60,17 +72,17 @@ mod tests {
         let colour2 = BURGUNDY;
         let colour3 = BURGUNDY;
         let material = Material::new(
-            colour.to_light_colour() * AMBIENT_COEFFICIENT,
+            AMBIENT_COEFFICIENT,
             colour.to_light_colour(),
             colour.to_light_colour(),
         );
         let material2 = Material::new(
-            colour2.to_light_colour() * AMBIENT_COEFFICIENT,
+            AMBIENT_COEFFICIENT,
             colour2.to_light_colour(),
             colour2.to_light_colour(),
         );
         let material3 = Material::new(
-            colour3.to_light_colour() * AMBIENT_COEFFICIENT,
+            AMBIENT_COEFFICIENT,
             colour3.to_light_colour(),
             colour3.to_light_colour(),
         );
@@ -115,7 +127,7 @@ mod tests {
             img_height: IMG_HEIGHT as usize,
             img_width: IMG_WIDTH as usize,
             scale: PIXEL_SCALE,
-            light_source
+            light_source,
         };
         let test_camera = Camera::new(camera_params);
 
@@ -125,6 +137,7 @@ mod tests {
         let mut img = RgbaImage::new(IMG_WIDTH, IMG_HEIGHT);
         let mut render_times: Vec<u128> = Vec::with_capacity(TEST_FRAMES);
         for _ in 0..TEST_FRAMES {
+            black_img(&mut img);
             let render_time =
                 timeit!({ render(&mut img, &test_camera, &test_shapes) })
                     .as_millis();
@@ -134,6 +147,18 @@ mod tests {
             render_times.iter().sum::<u128>() / render_times.len() as u128;
         let write_time =
             timeit!({ write_img(&img, &Path::new(TEST_PATH)) }).as_millis();
+        let conversion_time = timeit!({
+            let pixbuf = Pixbuf::from_bytes(
+                &img.as_bytes().into(),
+                Colorspace::Rgb,
+                true,
+                8,
+                IMG_SIZE as i32,
+                IMG_SIZE as i32,
+                (IMG_SIZE * 4) as i32,
+            );
+        })
+        .as_millis();
         println!(
             "\
             \n\tImg Size : {IMG_WIDTH}px x {IMG_HEIGHT}px\
@@ -141,7 +166,8 @@ mod tests {
             \n\tFrames: {TEST_FRAMES}\n\
             \n\tAvg ms/frame: {render_time_avg}ms\
             \n\tWrite time: {write_time}ms\n\
-        "
+            \n\tConversion Time: {conversion_time}ms
+            "
         );
     }
 }

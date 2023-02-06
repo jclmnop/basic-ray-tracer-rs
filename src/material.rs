@@ -23,6 +23,7 @@ const DEFAULT_SPECULAR_COEFFECIENT: f64 = 1.0;
 // TODO: change all to private
 #[derive(Copy, Clone)]
 pub struct Material {
+    ambient_coefficient: f64,
     ambient_k: LightColour,
     diffuse_k: LightColour,
     specular_k: LightColour,
@@ -30,12 +31,13 @@ pub struct Material {
 
 impl Material {
     pub fn new(
-        ambient: LightColour,
+        ambient_coefficient: f64,
         diffuse: LightColour,
         specular: LightColour,
     ) -> Self {
         Self {
-            ambient_k: ambient,
+            ambient_coefficient,
+            ambient_k: diffuse * ambient_coefficient,
             diffuse_k: diffuse,
             specular_k: specular,
         }
@@ -64,11 +66,18 @@ impl Material {
     pub fn set_specular(&mut self, new_colour: &PixelColour) {
         self.specular_k = new_colour.to_light_colour();
     }
+
+    pub fn set_colour(&mut self, new_colour: &PixelColour) {
+        self.diffuse_k = new_colour.to_light_colour();
+        self.ambient_k = new_colour.to_light_colour() * self.ambient_coefficient;
+        //TODO: specular coeff etc
+    }
 }
 
 impl Default for Material {
     fn default() -> Self {
         Self {
+            ambient_coefficient: DEFAULT_AMBIENT_COEFFICIENT,
             ambient_k: ZIMA_BLUE.to_light_colour()
                 * DEFAULT_AMBIENT_COEFFICIENT,
             diffuse_k: ZIMA_BLUE.to_light_colour(),

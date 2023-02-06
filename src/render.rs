@@ -1,5 +1,5 @@
 use crate::shapes::Shape;
-use crate::{Camera, Intersection, PixelColour, Point, Ray};
+use crate::{Camera, Intersection, PixelColour, Point, Ray, Sphere};
 use image::{ImageFormat, RgbaImage};
 use rayon::prelude::*;
 use std::cmp::Ordering;
@@ -8,7 +8,7 @@ use std::path::Path;
 const BACKGROUND: PixelColour = PixelColour { x: 0, y: 0, z: 0 };
 
 //TODO: render with GDK pixbuf instead (use Relm4?)
-pub fn render(img: &mut RgbaImage, camera: &Camera, shapes: &Vec<&dyn Shape>) {
+pub fn render(img: &mut RgbaImage, camera: &Camera, shapes: &Vec<Sphere>) {
     img.enumerate_rows_mut()
         .par_bridge()
         .into_par_iter()
@@ -19,7 +19,11 @@ pub fn render(img: &mut RgbaImage, camera: &Camera, shapes: &Vec<&dyn Shape>) {
                 .for_each(|(i, px)| {
                     let new_colour =
                         calculate_pixel_colour(i, j, camera, &shapes);
-                    px.2 .0 = [new_colour.x, new_colour.y, new_colour.z, 255];
+                    let new_colour =
+                        [new_colour.x, new_colour.y, new_colour.z, 255];
+                    if new_colour != px.2 .0 {
+                        px.2 .0 = new_colour;
+                    }
                 });
         })
 }
@@ -33,7 +37,7 @@ fn calculate_pixel_colour(
     i: usize,
     j: u32,
     camera: &Camera,
-    shapes: &Vec<&dyn Shape>,
+    shapes: &Vec<Sphere>,
 ) -> PixelColour {
     let (origin, direction) = camera.screen[j as usize][i];
     let ray = Ray { origin, direction };

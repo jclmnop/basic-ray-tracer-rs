@@ -1,5 +1,5 @@
 #![allow(dead_code, unused_variables)]
-use crate::{LightSource, Point, Vector3D};
+use crate::{IMG_HEIGHT, IMG_SIZE, IMG_WIDTH, LightSource, Point, Vector3D};
 use rayon::prelude::*;
 
 pub struct Camera {
@@ -24,6 +24,20 @@ pub struct CameraParams {
     pub img_width: usize,
     pub scale: f64,
     pub light_source: LightSource,
+}
+
+impl Default for CameraParams {
+    fn default() -> Self {
+        Self {
+            view_reference_point: Point::new(0.0, 0.0, -(IMG_SIZE as f64)),
+            approx_view_up_vector: Vector3D::new(0.0, 1.0, 0.0),
+            focal_length: IMG_SIZE as f64,
+            img_height: IMG_HEIGHT as usize,
+            img_width: IMG_WIDTH as usize,
+            scale: 0.3,
+            light_source: LightSource::default(),
+        }
+    }
 }
 
 pub struct CameraProps {
@@ -67,7 +81,7 @@ impl Camera {
             img_height: params.img_height,
             img_width: params.img_width,
             scale: params.scale,
-            light_source: LightSource::default()
+            light_source: LightSource::default(),
         };
         camera.new_screen();
 
@@ -188,6 +202,12 @@ impl Camera {
         pixel_point: &Point,
     ) -> Vector3D {
         *view_reference_point - *pixel_point
+    }
+}
+
+impl Default for Camera {
+    fn default() -> Self {
+        Camera::new(CameraParams::default())
     }
 }
 

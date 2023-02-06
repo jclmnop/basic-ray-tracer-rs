@@ -1,5 +1,5 @@
 #![allow(dead_code, unused_variables)]
-use crate::{Camera, Intersection, Material, Point, Ray, Vector3D};
+use crate::{Camera, Intersection, Material, PixelColour, Point, Ray, Vector3D};
 use std::cmp::Ordering;
 
 // #[derive(Copy, Clone)]
@@ -8,7 +8,11 @@ use std::cmp::Ordering;
 pub trait Shape: Sync {
     /// Calculate where the closes intersection between a ray and the surface of a
     /// shape is, relative to the origin of the ray, if it exists
-    fn intersection<'a>(&'a self, ray: &'a Ray, camera: &Camera) -> Option<Intersection>;
+    fn intersection<'a>(
+        &'a self,
+        ray: &'a Ray,
+        camera: &Camera,
+    ) -> Option<Intersection>;
 
     /// Calculate the surface normal for a point on the shape, normalised to
     /// a unit vector
@@ -33,6 +37,18 @@ impl Sphere {
         }
     }
 
+    pub fn adjust_radius(&mut self, delta: f64) {
+        self.radius += delta;
+    }
+
+    pub fn set_position(&mut self, new_position: Point) {
+        self.center = new_position;
+    }
+
+    pub fn set_colour(&mut self, new_colour: &PixelColour) {
+        self.material.set_colour(&new_colour);
+    }
+
     pub fn default_with_pos(c: Point) -> Self {
         let mut sphere = Self::default();
         sphere.center = c;
@@ -51,7 +67,11 @@ impl Default for Sphere {
 }
 
 impl Shape for Sphere {
-    fn intersection<'a>(&'a self, ray: &'a Ray, camera: &Camera) -> Option<Intersection> {
+    fn intersection<'a>(
+        &'a self,
+        ray: &'a Ray,
+        camera: &Camera,
+    ) -> Option<Intersection> {
         let v = ray.origin - self.center;
         let a = ray.direction.dot(&ray.direction);
         let b = 2.0 * (v.dot(&ray.direction));
