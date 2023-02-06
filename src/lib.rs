@@ -19,23 +19,6 @@ pub const IMG_WIDTH: u32 = IMG_SIZE;
 // Threads
 pub const NUM_THREADS: usize = 10;
 
-// Colours
-pub const ZIMA_BLUE: PixelColour = PixelColour {
-    x: 26,
-    y: 179,
-    z: 249,
-};
-pub const BURGUNDY: PixelColour = PixelColour {
-    x: 128,
-    y: 0,
-    z: 32,
-};
-pub const BURNT_ORANGE: PixelColour = PixelColour {
-    x: 204,
-    y: 85,
-    z: 0,
-};
-
 pub fn set_global_rayon_threads(n: usize) {
     rayon::ThreadPoolBuilder::new()
         .num_threads(n)
@@ -63,14 +46,14 @@ mod tests {
     const TEST_PATH: &str = "./test.png";
     const PIXEL_SCALE: f64 = 0.3;
     const TEST_FRAMES: usize = 100;
-    const AMBIENT_COEFFICIENT: f64 = 0.05;
+    const AMBIENT_COEFFICIENT: f64 = 0.3;
 
     #[test]
     fn it_works() {
         #![allow(unused_variables)]
         // set_global_rayon_threads(NUM_THREADS);
         let light_source: LightSource = LightSource {
-            position: Point::new(250.0, -250.0, -200.0),
+            position: Point::new(-250.0, -250.0, -100.0),
             colour: LightColour::new(1.0, 1.0, 1.0),
         };
         let colour = BURGUNDY;

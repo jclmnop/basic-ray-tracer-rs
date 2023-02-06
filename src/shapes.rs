@@ -32,6 +32,22 @@ impl Sphere {
             material,
         }
     }
+
+    pub fn default_with_pos(c: Point) -> Self {
+        let mut sphere = Self::default();
+        sphere.center = c;
+        sphere
+    }
+}
+
+impl Default for Sphere {
+    fn default() -> Self {
+        Self {
+            center: Point::new(0.0, 0.0, 0.0),
+            radius: 49.0,
+            material: Material::default(),
+        }
+    }
 }
 
 impl Shape for Sphere {

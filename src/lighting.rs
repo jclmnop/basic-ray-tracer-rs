@@ -8,6 +8,15 @@ pub struct LightSource {
     pub colour: LightColour,
 }
 
+impl Default for LightSource {
+    fn default() -> Self {
+        Self {
+            position: Point::new(-250.0, -250.0, -100.0),
+            colour: LightColour::new(1.0, 1.0, 1.0),
+        }
+    }
+}
+
 #[derive(Copy, Clone)]
 pub struct Ray {
     pub origin: Point,

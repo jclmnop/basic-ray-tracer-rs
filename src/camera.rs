@@ -4,8 +4,8 @@ use rayon::prelude::*;
 
 pub struct Camera {
     look_at: Point,
-    view_reference_point: Point, // use as projection point
-    view_plane_normal: Vector3D, // use to calc position of center pixel in "screen"
+    view_reference_point: Point,
+    view_plane_normal: Vector3D,
     view_up_vector: Vector3D,
     view_right_vector: Vector3D,
     focal_length: f64,
@@ -24,17 +24,21 @@ pub struct CameraParams {
     pub scale: f64,
 }
 
+pub struct CameraProps {
+    pub screen_center_point: Point,
+    pub img_width: usize,
+    pub img_height: usize,
+    pub scale: f64,
+    pub vrv: Vector3D,
+    pub vuv: Vector3D,
+    pub vrp: Point,
+}
+
 // TODO: figure out how to move along x/y/z axes relative to the current
 //       VPN by adjusting VRP accordingly
 //       e.g. when moving camera up, we don't want to go straight up the
 //            y-axis, instead we want to move up in a way that we're rotating
 //            around the view_reference_point (0, 0, 0)
-//TODO: replace orthogonal ray tracing (and scaling etc) with perspective raytracing
-//          - add focal length
-//          - add "view plane" (screen, 2D array)
-//          - calc ray direction from each pixel in view plane, and store in array
-//          - `(pixel_point - projection_point).normalise() * -1.0`
-//          - use that direction in render() function for each pixel
 impl Camera {
     /// Create a new `Camera` facing the origin (0, 0, 0)
     pub fn new(params: CameraParams) -> Self {
@@ -98,6 +102,23 @@ impl Camera {
         todo!()
     }
 
+    pub fn camera_props(&self) -> CameraProps {
+        let distance_from_projection_point =
+            self.view_plane_normal * self.focal_length;
+        let screen_center_point =
+            self.view_reference_point + distance_from_projection_point;
+
+        CameraProps {
+            screen_center_point,
+            img_width: self.img_width,
+            img_height: self.img_height,
+            scale: self.scale,
+            vrv: self.vrv(),
+            vuv: self.vuv(),
+            vrp: self.vrp(),
+        }
+    }
+
     fn new_screen(&mut self) {
         let mut empty_screen: Vec<Vec<(Point, Vector3D)>> =
             Vec::with_capacity(self.img_height);
@@ -109,33 +130,16 @@ impl Camera {
     }
 
     fn setup_screen(&mut self) {
-        let distance_from_projection_point =
-            self.view_plane_normal * self.focal_length;
-        let screen_center_point =
-            self.view_reference_point + distance_from_projection_point;
-        let img_width = self.img_width;
-        let img_height = self.img_height;
-        let scale = self.scale;
-        let vrv = self.vrv();
-        let vuv = self.vuv();
-        let vrp = self.vrp();
+        // This is just a way to get around the issue of passing an immutable
+        // reference to self into methods during par_iter_mut()
+        let camera_props = self.camera_props();
 
         //TODO: speed this up by using arrays instead of vectors?
         self.screen.par_iter_mut().enumerate().for_each(|(j, row)| {
             row.clear();
             let capacity = row.capacity();
             for i in 0..capacity {
-                let pixel_props = Self::calc_pixel_props(
-                    i,
-                    j,
-                    &screen_center_point,
-                    img_width,
-                    img_height,
-                    scale,
-                    vrv,
-                    vuv,
-                    vrp,
-                );
+                let pixel_props = Self::calc_pixel_props(i, j, &camera_props);
                 row.push(pixel_props);
             }
         });
@@ -144,49 +148,32 @@ impl Camera {
     fn calc_pixel_props(
         i: usize,
         j: usize,
-        screen_center_point: &Point,
-        img_width: usize,
-        img_height: usize,
-        scale: f64,
-        vrv: Vector3D,
-        vuv: Vector3D,
-        vrp: Point,
+        camera_props: &CameraProps,
     ) -> (Point, Vector3D) {
-        let pixel_point = Self::calc_pixel_point(
-            i,
-            j,
-            screen_center_point,
-            img_width,
-            img_height,
-            scale,
-            vrv,
-            vuv,
-        );
-        let pixel_direction = Self::calc_pixel_direction(&vrp, &pixel_point);
+        let pixel_point = Self::calc_pixel_point(i, j, camera_props);
+        let pixel_direction =
+            Self::calc_pixel_direction(&camera_props.vrp, &pixel_point);
         (pixel_point, pixel_direction)
     }
 
     fn calc_pixel_point(
         i: usize,
         j: usize,
-        screen_center_point: &Point,
-        img_width: usize,
-        img_height: usize,
-        scale: f64,
-        vrv: Vector3D,
-        vuv: Vector3D,
+        camera_props: &CameraProps,
     ) -> Point {
         let i = i as f64;
         let j = j as f64;
-        let width = img_width as f64;
-        let height = img_height as f64;
+        let width = camera_props.img_width as f64;
+        let height = camera_props.img_height as f64;
 
         // TODO: I had to invert both of these so that +x is to the right, and
         //       +y is up, what am I doing wrong?
-        let u = ((width - i) - width / 2.0) * scale;
-        let v = ((height - j) - height / 2.0) * scale;
+        let u = ((width - i) - width / 2.0) * camera_props.scale;
+        let v = ((height - j) - height / 2.0) * camera_props.scale;
 
-        *screen_center_point + (vrv * u) + (vuv * v)
+        camera_props.screen_center_point
+            + (camera_props.vrv * u)
+            + (camera_props.vuv * v)
     }
 
     fn calc_pixel_direction(
@@ -207,9 +194,9 @@ mod tests {
 
     fn test_camera() -> Camera {
         let camera_params = CameraParams {
-            view_reference_point: Point::new(0.0, 0.0, -200.0),
+            view_reference_point: Point::new(0.0, 0.0, -1000.0),
             approx_view_up_vector: Vector3D::new(0.0, 1.0, 0.0),
-            focal_length: 200.0,
+            focal_length: 1000.0,
             img_height: IMG_HEIGHT as usize,
             img_width: IMG_WIDTH as usize,
             scale: PIXEL_SCALE,
@@ -221,7 +208,7 @@ mod tests {
     fn camera_created_with_correct_values() {
         let camera = test_camera();
 
-        assert_eq!(camera.vrp(), Point::new(0.0, 0.0, -200.0));
+        assert_eq!(camera.vrp(), Point::new(0.0, 0.0, -1000.0));
         assert_eq!(camera.look_at, Point::new(0.0, 0.0, 0.0));
         assert_eq!(camera.vpn(), Vector3D::new(0.0, 0.0, 1.0));
         assert_eq!(camera.vrv(), Vector3D::new(-1.0, 0.0, 0.0));
@@ -231,46 +218,50 @@ mod tests {
             test_camera();
         })
         .as_millis();
-        println!("Camera setup time: {setup_time}ms");
+        println!("\tCamera setup time: {setup_time}ms");
     }
 
-    // #[test]
-    // fn correct_pixel_point() {
-    //     let camera = test_camera();
-    //     let distance_from_projection_point =
-    //         camera.view_plane_normal * camera.focal_length;
-    //     let screen_center_point =
-    //         camera.view_reference_point + distance_from_projection_point;
-    //     let i_center = camera.img_width / 2;
-    //     let j_center = camera.img_height / 2;
-    //     let point_center_pixel =
-    //         camera.calc_pixel_point(i_center, j_center, &screen_center_point);
-    //
-    //     let (i_left, j_left) = (i_center - 300, j_center);
-    //     let point_left_pixel =
-    //         camera.calc_pixel_point(i_left, j_left, &screen_center_point);
-    //
-    //     let (i_down, j_down) = (i_center, j_center + 300);
-    //     let point_down_pixel =
-    //         camera.calc_pixel_point(i_down, j_down, &screen_center_point);
-    //
-    //     let (i_diagonal, j_diagonal) = (i_center - 300, j_center + 300);
-    //     let point_diagonal_pixel = camera.calc_pixel_point(
-    //         i_diagonal,
-    //         j_diagonal,
-    //         &screen_center_point,
-    //     );
-    //
-    //     println!();
-    //     println!("centre: {}", point_center_pixel);
-    //     println!("left: {point_left_pixel}");
-    //     println!("down: {point_down_pixel}");
-    //     println!("diagonal: {point_diagonal_pixel}");
-    //     println!();
-    //
-    //     assert_eq!(point_center_pixel, screen_center_point);
-    //     assert_eq!(point_left_pixel, Point::new(-300.0, 0.0, 0.0));
-    //     assert_eq!(point_down_pixel, Point::new(0.0, -300.0, 0.0));
-    //     assert_eq!(point_diagonal_pixel, Point::new(-300.0, -300.0, 0.0));
-    // }
+    #[test]
+    fn correct_pixel_point() {
+        let camera = test_camera();
+        let distance_from_projection_point =
+            camera.view_plane_normal * camera.focal_length;
+        let screen_center_point =
+            camera.view_reference_point + distance_from_projection_point;
+        let i_center = camera.img_width / 2;
+        let j_center = camera.img_height / 2;
+        let props = CameraProps {
+            screen_center_point,
+            img_width: camera.img_width,
+            img_height: camera.img_height,
+            scale: camera.scale,
+            vrv: camera.vrv(),
+            vuv: camera.vuv(),
+            vrp: camera.vrp(),
+        };
+        let point_center_pixel =
+            Camera::calc_pixel_point(i_center, j_center, &props);
+        let (i_left, j_left) = (i_center - 300, j_center);
+        let point_left_pixel = Camera::calc_pixel_point(i_left, j_left, &props);
+
+        let (i_down, j_down) = (i_center, j_center + 300);
+        let point_down_pixel = Camera::calc_pixel_point(i_down, j_down, &props);
+
+        let (i_diagonal, j_diagonal) = (i_center - 300, j_center + 300);
+        let point_diagonal_pixel =
+            Camera::calc_pixel_point(i_diagonal, j_diagonal, &props);
+
+        println!();
+        println!("\tcentre: {}", point_center_pixel);
+        println!("\tleft: {point_left_pixel}");
+        println!("\tdown: {point_down_pixel}");
+        println!("\tdiagonal: {point_diagonal_pixel}");
+        println!("\tVRP: {}\n\tVPN: {}", camera.vrp(), camera.vpn());
+        println!();
+
+        assert_eq!(point_center_pixel, screen_center_point);
+        assert_eq!(point_left_pixel, Point::new(-300.0, 0.0, 0.0));
+        assert_eq!(point_down_pixel, Point::new(0.0, -300.0, 0.0));
+        assert_eq!(point_diagonal_pixel, Point::new(-300.0, -300.0, 0.0));
+    }
 }
