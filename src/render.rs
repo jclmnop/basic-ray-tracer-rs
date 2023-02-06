@@ -39,7 +39,7 @@ fn calculate_pixel_colour(
     let ray = Ray { origin, direction };
     let intersections = shapes
         .iter()
-        .map(|s| s.intersection(&ray))
+        .map(|s| s.intersection(&ray, &camera))
         .collect::<Vec<_>>();
     let closest_intersect = closest_intersect(intersections, &ray.origin);
     if let Some(intersection) = closest_intersect {

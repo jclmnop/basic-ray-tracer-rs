@@ -1,5 +1,5 @@
 #![allow(dead_code, unused_variables)]
-use crate::{Intersection, Material, Point, Ray, Vector3D};
+use crate::{Camera, Intersection, Material, Point, Ray, Vector3D};
 use std::cmp::Ordering;
 
 // #[derive(Copy, Clone)]
@@ -8,7 +8,7 @@ use std::cmp::Ordering;
 pub trait Shape: Sync {
     /// Calculate where the closes intersection between a ray and the surface of a
     /// shape is, relative to the origin of the ray, if it exists
-    fn intersection<'a>(&'a self, ray: &'a Ray) -> Option<Intersection>;
+    fn intersection<'a>(&'a self, ray: &'a Ray, camera: &Camera) -> Option<Intersection>;
 
     /// Calculate the surface normal for a point on the shape, normalised to
     /// a unit vector
@@ -51,18 +51,17 @@ impl Default for Sphere {
 }
 
 impl Shape for Sphere {
-    fn intersection<'a>(&'a self, ray: &'a Ray) -> Option<Intersection> {
+    fn intersection<'a>(&'a self, ray: &'a Ray, camera: &Camera) -> Option<Intersection> {
         let v = ray.origin - self.center;
         let a = ray.direction.dot(&ray.direction);
         let b = 2.0 * (v.dot(&ray.direction));
         let c = v.dot(&v) - (self.radius * self.radius); //* self.scale(ray));
         if let Some(t) = solve_t(a, b, c) {
-            //TODO: use phong shit
             Some(Intersection::new(
                 ray.point(t),
                 self,
                 ray,
-                self.material.light_source(),
+                camera.light_source(),
             ))
         } else {
             None

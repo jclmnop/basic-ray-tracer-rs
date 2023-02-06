@@ -1,4 +1,4 @@
-use crate::{LightColour, LightSource, PixelColour};
+use crate::{LightColour, PixelColour};
 
 // Colours
 pub const ZIMA_BLUE: PixelColour = PixelColour {
@@ -26,7 +26,6 @@ pub struct Material {
     ambient_k: LightColour,
     diffuse_k: LightColour,
     specular_k: LightColour,
-    light_source: LightSource,
 }
 
 impl Material {
@@ -34,13 +33,11 @@ impl Material {
         ambient: LightColour,
         diffuse: LightColour,
         specular: LightColour,
-        light_source: LightSource,
     ) -> Self {
         Self {
             ambient_k: ambient,
             diffuse_k: diffuse,
             specular_k: specular,
-            light_source,
         }
     }
 
@@ -54,10 +51,6 @@ impl Material {
 
     pub fn specular_k(&self) -> LightColour {
         self.specular_k
-    }
-
-    pub fn light_source(&self) -> LightSource {
-        self.light_source
     }
 
     pub fn set_ambient(&mut self, new_colour: &PixelColour) {
@@ -81,7 +74,6 @@ impl Default for Material {
             diffuse_k: ZIMA_BLUE.to_light_colour(),
             specular_k: ZIMA_BLUE.to_light_colour()
                 * DEFAULT_SPECULAR_COEFFECIENT,
-            light_source: LightSource::default(),
         }
     }
 }

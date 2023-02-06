@@ -63,19 +63,16 @@ mod tests {
             colour.to_light_colour() * AMBIENT_COEFFICIENT,
             colour.to_light_colour(),
             colour.to_light_colour(),
-            light_source,
         );
         let material2 = Material::new(
             colour2.to_light_colour() * AMBIENT_COEFFICIENT,
             colour2.to_light_colour(),
             colour2.to_light_colour(),
-            light_source,
         );
         let material3 = Material::new(
             colour3.to_light_colour() * AMBIENT_COEFFICIENT,
             colour3.to_light_colour(),
             colour3.to_light_colour(),
-            light_source,
         );
         let radius: f64 = 49.0;
 
@@ -118,6 +115,7 @@ mod tests {
             img_height: IMG_HEIGHT as usize,
             img_width: IMG_WIDTH as usize,
             scale: PIXEL_SCALE,
+            light_source
         };
         let test_camera = Camera::new(camera_params);
 

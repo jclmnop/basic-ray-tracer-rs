@@ -1,5 +1,5 @@
 #![allow(dead_code, unused_variables)]
-use crate::{Point, Vector3D};
+use crate::{LightSource, Point, Vector3D};
 use rayon::prelude::*;
 
 pub struct Camera {
@@ -13,6 +13,7 @@ pub struct Camera {
     img_height: usize,
     img_width: usize,
     scale: f64,
+    light_source: LightSource,
 }
 
 pub struct CameraParams {
@@ -22,6 +23,7 @@ pub struct CameraParams {
     pub img_height: usize,
     pub img_width: usize,
     pub scale: f64,
+    pub light_source: LightSource,
 }
 
 pub struct CameraProps {
@@ -65,6 +67,7 @@ impl Camera {
             img_height: params.img_height,
             img_width: params.img_width,
             scale: params.scale,
+            light_source: LightSource::default()
         };
         camera.new_screen();
 
@@ -85,6 +88,10 @@ impl Camera {
 
     pub fn vrv(&self) -> Vector3D {
         self.view_right_vector
+    }
+
+    pub fn light_source(&self) -> LightSource {
+        self.light_source
     }
 
     /// Move camera along the x-axis
@@ -200,6 +207,7 @@ mod tests {
             img_height: IMG_HEIGHT as usize,
             img_width: IMG_WIDTH as usize,
             scale: PIXEL_SCALE,
+            light_source: LightSource::default(),
         };
         Camera::new(camera_params)
     }
