@@ -1,5 +1,5 @@
 #![allow(dead_code, unused_variables)]
-use crate::{IMG_HEIGHT, IMG_SIZE, IMG_WIDTH, LightSource, Point, Vector3D};
+use crate::{LightSource, Point, Vector3D, IMG_HEIGHT, IMG_SIZE, IMG_WIDTH};
 use rayon::prelude::*;
 
 pub struct Camera {
@@ -34,7 +34,7 @@ impl Default for CameraParams {
             focal_length: IMG_SIZE as f64,
             img_height: IMG_HEIGHT as usize,
             img_width: IMG_WIDTH as usize,
-            scale: 0.3,
+            scale: 1.0,
             light_source: LightSource::default(),
         }
     }

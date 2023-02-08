@@ -25,7 +25,7 @@ const DEFAULT_SPECULAR_COEFFECIENT: f64 = 1.0;
 pub struct Material {
     ambient_coefficient: f64,
     ambient_k: LightColour,
-    diffuse_k: LightColour,
+    pub diffuse_k: LightColour,
     specular_k: LightColour,
 }
 
@@ -69,7 +69,8 @@ impl Material {
 
     pub fn set_colour(&mut self, new_colour: &PixelColour) {
         self.diffuse_k = new_colour.to_light_colour();
-        self.ambient_k = new_colour.to_light_colour() * self.ambient_coefficient;
+        self.ambient_k =
+            new_colour.to_light_colour() * self.ambient_coefficient;
         //TODO: specular coeff etc
     }
 }

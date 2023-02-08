@@ -1,5 +1,7 @@
 #![allow(dead_code, unused_variables)]
-use crate::{Camera, Intersection, Material, PixelColour, Point, Ray, Vector3D};
+use crate::{
+    Camera, Intersection, Material, PixelColour, Point, Ray, Vector3D,
+};
 use std::cmp::Ordering;
 
 // #[derive(Copy, Clone)]
