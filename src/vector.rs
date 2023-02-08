@@ -1,5 +1,6 @@
 use num::{Bounded, Num, NumCast, ToPrimitive};
 use std::fmt::{Display, Formatter};
+use gtk::gdk::RGBA;
 
 pub trait VectorNum:
     Copy
@@ -121,6 +122,16 @@ impl Vector<u8> {
             self.y as f64 / 255.0,
             self.z as f64 / 255.0,
         ])
+    }
+}
+
+impl From<gtk::gdk::RGBA> for Vector<u8> {
+    fn from(value: RGBA) -> Self {
+        Self::new(
+            value.red() * 255.0 as u8,
+            value.green() * 255.0 as u8,
+            value.blue() * 255.0 as u8
+        )
     }
 }
 
