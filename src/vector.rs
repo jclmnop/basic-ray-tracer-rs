@@ -125,7 +125,7 @@ impl Vector<u8> {
     }
 }
 
-impl From<gtk::gdk::RGBA> for Vector<u8> {
+impl From<RGBA> for Vector<u8> {
     fn from(value: RGBA) -> Self {
         Self::new(
             value.red() * 255.0 as u8,
