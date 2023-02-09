@@ -29,12 +29,12 @@ pub struct CameraParams {
 impl Default for CameraParams {
     fn default() -> Self {
         Self {
-            view_reference_point: Point::new(0.0, 0.0, -(IMG_SIZE as f64)),
+            view_reference_point: Point::new(0.0, 0.0, -(IMG_SIZE as f64 * 1.7)),
             approx_view_up_vector: Vector3D::new(0.0, 1.0, 0.0),
             focal_length: IMG_SIZE as f64,
             img_height: IMG_HEIGHT as usize,
             img_width: IMG_WIDTH as usize,
-            scale: 1.0,
+            scale: 0.5,
             light_source: LightSource::default(),
         }
     }
@@ -59,8 +59,7 @@ impl Camera {
     /// Create a new `Camera` facing the origin (0, 0, 0)
     pub fn new(params: CameraParams) -> Self {
         let look_at = Point::new(0.0, 0.0, 0.0);
-        let mut view_plane_normal =
-            (look_at - params.view_reference_point).to_f64();
+        let mut view_plane_normal = look_at - params.view_reference_point;
         view_plane_normal.normalise();
 
         let mut view_right_vector =
@@ -201,7 +200,7 @@ impl Camera {
         view_reference_point: &Point,
         pixel_point: &Point,
     ) -> Vector3D {
-        *view_reference_point - *pixel_point
+        *pixel_point - *view_reference_point
     }
 }
 

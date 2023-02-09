@@ -45,33 +45,27 @@ fn calculate_pixel_colour(
         .iter()
         .map(|s| s.intersection(&ray, &camera))
         .collect::<Vec<_>>();
-    let closest_intersect = closest_intersect(intersections, &ray.origin);
+    let closest_intersect = closest_intersect(intersections);
     if let Some(intersection) = closest_intersect {
-        // intersection.1
         intersection.phong(&origin)
     } else {
         BACKGROUND
     }
 }
 
-fn closest_intersect<'a>(
-    intersects: Vec<Option<Intersection<'a>>>,
-    origin: &Point,
-) -> Option<Intersection<'a>> {
+fn closest_intersect(
+    intersects: Vec<Option<Intersection>>,
+) -> Option<Intersection> {
     let mut closest: Option<Intersection> = None;
     for intersection_option in intersects {
         if let Some(intersection) = intersection_option {
-            if closest.is_none() {
-                closest = Some(intersection);
-            } else {
-                let closest_distance =
-                    (*origin - closest.unwrap().point()).magnitude().abs();
-                let this_distance =
-                    (*origin - intersection.point()).magnitude().abs();
-                closest = match closest_distance.total_cmp(&this_distance) {
-                    Ordering::Greater => Some(intersection),
-                    _ => closest,
+            if let Some(closest_intersection) = closest {
+                match intersection.t().total_cmp(&closest_intersection.t()) {
+                    Ordering::Less => closest = Some(intersection),
+                    _ => {}
                 }
+            } else {
+                closest = Some(intersection);
             }
         }
     }

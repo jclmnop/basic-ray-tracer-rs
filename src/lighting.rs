@@ -11,7 +11,7 @@ pub struct LightSource {
 impl Default for LightSource {
     fn default() -> Self {
         Self {
-            position: Point::new(-250.0, -250.0, -100.0),
+            position: Point::new(-250.0, -250.0, -500.0),
             colour: LightColour::new(1.0, 1.0, 1.0),
         }
     }
@@ -31,25 +31,35 @@ impl Ray {
 
 #[derive(Copy, Clone)]
 pub struct Intersection<'a> {
+    t: f64,
     point: Point,
     object: &'a dyn Shape,
     ray: &'a Ray,
     light_source: LightSource,
+    is_inside: bool,
 }
 
 impl<'a> Intersection<'a> {
     pub fn new(
+        t: f64,
         point: Point,
         object: &'a impl Shape,
         ray: &'a Ray,
         light_source: LightSource,
+        is_inside: bool,
     ) -> Self {
         Self {
+            t,
             point,
             object,
             ray,
             light_source,
+            is_inside,
         }
+    }
+
+    pub fn t(&self) -> f64 {
+        self.t
     }
 
     pub fn point(&self) -> Point {
@@ -73,11 +83,19 @@ impl<'a> Intersection<'a> {
     }
 
     fn phong_ambient(&self, pixel_point: &Point) -> PixelColour {
-        PixelColour::new(
-            self.phong_ambient_colour_channel(ColourChannel::Red),
-            self.phong_ambient_colour_channel(ColourChannel::Green),
-            self.phong_ambient_colour_channel(ColourChannel::Blue),
-        )
+        if self.is_inside {
+            PixelColour::new(
+                self.phong_ambient_colour_channel(ColourChannel::Red),
+                self.phong_ambient_colour_channel(ColourChannel::Green),
+                self.phong_ambient_colour_channel(ColourChannel::Blue),
+            ) / 2
+        } else {
+            PixelColour::new(
+                self.phong_ambient_colour_channel(ColourChannel::Red),
+                self.phong_ambient_colour_channel(ColourChannel::Green),
+                self.phong_ambient_colour_channel(ColourChannel::Blue),
+            )
+        }
     }
 
     fn phong_ambient_colour_channel(&self, channel: ColourChannel) -> u8 {

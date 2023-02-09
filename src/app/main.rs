@@ -1,15 +1,12 @@
 use gtk::gdk_pixbuf::{Colorspace, Pixbuf};
 use gtk::prelude::*;
-use gtk::{CheckButton, Image, Orientation};
-use gtk::gdk::RGBA;
-use gtk::glib::MainContext;
+use gtk::{Image, Orientation};
 use image::{EncodableLayout, RgbaImage};
-use ray_tracing::{render, Camera, PixelColour, Sphere, Vector3D, LightColour, IMG_HEIGHT, IMG_SIZE, IMG_WIDTH, Point, ColourChannel};
+use ray_tracing::{render, Camera, Sphere, LightColour, IMG_HEIGHT, IMG_SIZE, IMG_WIDTH, Point, ColourChannel};
 use relm4::{send, AppUpdate, Model, RelmApp, Sender, WidgetPlus, Widgets};
-use relm4::factory::{Factory, FactoryPrototype, FactoryVec, FactoryView};
-use relm4_macros::view;
-use seq_macro::seq;
 use tracker::track;
+
+//TODO: figure out why closest intersection is reversed atm
 
 pub fn main() {
     // gtk::init().unwrap();
