@@ -1,7 +1,5 @@
 #![allow(dead_code, unused_variables)]
-use crate::{
-    Camera, Intersection, Material, PixelColour, Point, Ray, Vector3D,
-};
+use crate::{Camera, ColourChannel, Intersection, Material, PixelColour, Point, Ray, Vector3D};
 use std::cmp::Ordering;
 
 // #[derive(Copy, Clone)]
@@ -47,8 +45,24 @@ impl Sphere {
         self.center = new_position;
     }
 
+    pub fn set_x(&mut self, new_x: f64) {
+        self.center.x = new_x;
+    }
+
+    pub fn set_y(&mut self, new_y: f64) {
+        self.center.y = new_y;
+    }
+
+    pub fn set_z(&mut self, new_z: f64) {
+        self.center.z = new_z;
+    }
+
     pub fn set_colour(&mut self, new_colour: &PixelColour) {
         self.material.set_colour(&new_colour);
+    }
+
+    pub fn set_colour_channel(&mut self, channel: &ColourChannel, value: u8) {
+        self.material.set_colour_channel(channel, value);
     }
 
     pub fn default_with_pos(c: Point) -> Self {
@@ -62,7 +76,7 @@ impl Default for Sphere {
     fn default() -> Self {
         Self {
             center: Point::new(0.0, 0.0, 0.0),
-            radius: 49.0,
+            radius: 100.0,
             material: Material::default(),
         }
     }

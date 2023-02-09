@@ -1,4 +1,4 @@
-use crate::{LightColour, PixelColour};
+use crate::{ColourChannel, LightColour, PixelColour};
 
 // Colours
 pub const ZIMA_BLUE: PixelColour = PixelColour {
@@ -73,16 +73,34 @@ impl Material {
             new_colour.to_light_colour() * self.ambient_coefficient;
         //TODO: specular coeff etc
     }
+
+    pub fn set_colour_channel(&mut self, channel: &ColourChannel, value: u8) {
+        let value: f64 = value as f64 / 255.0;
+        match channel {
+            ColourChannel::Red => {
+                self.diffuse_k.x = value;
+                self.ambient_k.x = value * self.ambient_coefficient;
+            },
+            ColourChannel::Green => {
+                self.diffuse_k.y = value;
+                self.ambient_k.y = value * self.ambient_coefficient;
+            },
+            ColourChannel::Blue => {
+                self.diffuse_k.z = value;
+                self.ambient_k.z = value * self.ambient_coefficient;
+            },
+        };
+    }
 }
 
 impl Default for Material {
     fn default() -> Self {
         Self {
             ambient_coefficient: DEFAULT_AMBIENT_COEFFICIENT,
-            ambient_k: ZIMA_BLUE.to_light_colour()
+            ambient_k: BURGUNDY.to_light_colour()
                 * DEFAULT_AMBIENT_COEFFICIENT,
-            diffuse_k: ZIMA_BLUE.to_light_colour(),
-            specular_k: ZIMA_BLUE.to_light_colour()
+            diffuse_k: BURGUNDY.to_light_colour(),
+            specular_k: BURGUNDY.to_light_colour()
                 * DEFAULT_SPECULAR_COEFFECIENT,
         }
     }

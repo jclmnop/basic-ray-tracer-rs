@@ -14,7 +14,7 @@ pub use shapes::*;
 pub use vector::*;
 
 // Image parameters TODO: ImageParam struct
-pub const IMG_SIZE: u32 = 640;
+pub const IMG_SIZE: u32 = 1000;
 pub const IMG_HEIGHT: u32 = IMG_SIZE;
 pub const IMG_WIDTH: u32 = IMG_SIZE;
 

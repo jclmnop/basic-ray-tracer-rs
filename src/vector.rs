@@ -28,7 +28,7 @@ pub type Vector3D = Vector<f64>;
 /// Range from 0.0 to 1.0
 pub type LightColour = Vector<f64>;
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub enum ColourChannel {
     Red,
     Green,
@@ -128,9 +128,9 @@ impl Vector<u8> {
 impl From<RGBA> for Vector<u8> {
     fn from(value: RGBA) -> Self {
         Self::new(
-            value.red() * 255.0 as u8,
-            value.green() * 255.0 as u8,
-            value.blue() * 255.0 as u8
+            (value.red() * 255.0) as u8,
+            (value.green() * 255.0) as u8,
+            (value.blue() * 255.0) as u8
         )
     }
 }
