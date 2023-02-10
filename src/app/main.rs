@@ -8,7 +8,6 @@ use relm4::{send, AppUpdate, Model, RelmApp, Sender, WidgetPlus, Widgets, set_gl
 use tracker::track;
 
 pub fn main() {
-    // gtk::init().unwrap();
     let mut model = AppModel {
         shapes: vec![
             Sphere::default(),
@@ -135,6 +134,7 @@ impl AppUpdate for AppModel {
 const UPPER_BOUND_POS: f64 = (IMG_SIZE as f64) / 2.0;
 const LOWER_BOUND_POS: f64 = -((IMG_SIZE as f64) / 2.0);
 
+// This is in abomination and should never be seen
 #[relm4::widget]
 impl Widgets<AppModel, ()> for AppWidgets {
     view! {
@@ -191,8 +191,6 @@ impl Widgets<AppModel, ()> for AppWidgets {
                         set_spacing: 10,
                         set_valign: gtk::Align::Fill,
 
-                        // append: red_box = &gtk::Box {
-                        //     set_orientation: gtk::Orientation::Vertical,
                             append: red = &gtk::Scale {
                                 set_orientation: gtk::Orientation::Vertical,
                                 set_inverted: true,
@@ -209,14 +207,6 @@ impl Widgets<AppModel, ()> for AppWidgets {
                                     send!(sender, AppMsg::ChangeColour(ColourChannel::Red, v));
                                 }
                             },
-                            // append: red_label = &gtk::Label {
-                            //     set_valign: gtk::Align::End,
-                            //     set_label: "R"
-                            // },
-                        // },
-                        // append: green_box = &gtk::Box {
-                        //     set_orientation: gtk::Orientation::Vertical,
-                        //     set_valign: gtk::Align::Fill,
 
                             append: green = &gtk::Scale {
                                 set_orientation: gtk::Orientation::Vertical,
@@ -235,15 +225,6 @@ impl Widgets<AppModel, ()> for AppWidgets {
                                 }
                             },
 
-                            // append: green_label = &gtk::Label {
-                            //     set_valign: gtk::Align::End,
-                            //     set_label: "G"
-                            // },
-                        // },
-                        // append: blue_box = &gtk::Box {
-                        //     set_orientation: gtk::Orientation::Vertical,
-                        //     set_valign: gtk::Align::Fill,
-
                             append: blue = &gtk::Scale {
                                 set_orientation: gtk::Orientation::Vertical,
                                 set_inverted: true,
@@ -260,12 +241,6 @@ impl Widgets<AppModel, ()> for AppWidgets {
                                     send!(sender, AppMsg::ChangeColour(ColourChannel::Blue, v));
                                 }
                             },
-
-                            // append: blue_label = &gtk::Label {
-                            //     set_valign: gtk::Align::End,
-                            //     set_label: "B"
-                            // },
-                        // },
                     },
                     append = &gtk::Separator::new(gtk::Orientation::Vertical) {
                         set_halign: gtk::Align::Center,
@@ -294,8 +269,6 @@ impl Widgets<AppModel, ()> for AppWidgets {
                             },
                         },
                     },
-
-
                 },
                 append = &gtk::Separator::new(gtk::Orientation::Horizontal) {},
 
