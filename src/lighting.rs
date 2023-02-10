@@ -123,7 +123,7 @@ impl<'a> Intersection<'a> {
         // direction_n: &Vector3D,
         n_l_dot: f64,
     ) -> u8 {
-        let diffuse_k = self.object().material().diffuse_k();
+        let diffuse_k = self.object().material().colour();
         let colour_k = diffuse_k.colour(&channel);
         let colour_l = self.light_source.colour.colour(&channel);
 

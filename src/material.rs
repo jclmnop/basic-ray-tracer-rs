@@ -1,9 +1,6 @@
 use crate::{ColourChannel, LightColour, PixelColour};
 
-// TODO: refactor ambient_k fields etc:
-//          - single colour field
-//          - ambient + specular coefficients
-//          - getter methods for ambient/specular colour which calculate
+// TODO: specular lighting (i think it's optional but fuck it)
 
 // Colours
 pub const ZIMA_BLUE: PixelColour = PixelColour {
@@ -22,76 +19,64 @@ pub const BURNT_ORANGE: PixelColour = PixelColour {
     z: 0,
 };
 
-const DEFAULT_AMBIENT_COEFFICIENT: f64 = 0.3;
+const DEFAULT_AMBIENT_COEFFICIENT: f64 = 0.1;
 const DEFAULT_SPECULAR_COEFFICIENT: f64 = 1.0;
 
 #[derive(Copy, Clone)]
 pub struct Material {
     ambient_coefficient: f64,
-    ambient_k: LightColour,
-    pub diffuse_k: LightColour,
-    specular_k: LightColour,
+    specular_coefficient: f64,
+    pub colour: LightColour,
 }
 
 impl Material {
     pub fn new(
         ambient_coefficient: f64,
         diffuse: LightColour,
-        specular: LightColour,
+        specular_coefficient: f64,
     ) -> Self {
         Self {
             ambient_coefficient,
-            ambient_k: diffuse * ambient_coefficient,
-            diffuse_k: diffuse,
-            specular_k: specular,
+            specular_coefficient,
+            colour: diffuse,
         }
     }
 
     pub fn ambient_k(&self) -> LightColour {
-        self.ambient_k
+        self.colour * self.ambient_coefficient
     }
 
-    pub fn diffuse_k(&self) -> LightColour {
-        self.diffuse_k
+    pub fn colour(&self) -> LightColour {
+        self.colour
     }
 
     pub fn specular_k(&self) -> LightColour {
-        self.specular_k
+        self.colour * self.specular_coefficient
     }
 
-    pub fn set_ambient(&mut self, new_colour: &PixelColour) {
-        self.ambient_k = new_colour.to_light_colour();
-    }
-
-    pub fn set_diffuse(&mut self, new_colour: &PixelColour) {
-        self.diffuse_k = new_colour.to_light_colour();
-    }
-
-    pub fn set_specular(&mut self, new_colour: &PixelColour) {
-        self.specular_k = new_colour.to_light_colour();
+    pub fn set_ambient_coefficient(&mut self, new_coefficient: f64) {
+        self.ambient_coefficient = new_coefficient;
     }
 
     pub fn set_colour(&mut self, new_colour: &PixelColour) {
-        self.diffuse_k = new_colour.to_light_colour();
-        self.ambient_k =
-            new_colour.to_light_colour() * self.ambient_coefficient;
-        //TODO: specular coeff etc
+        self.colour = new_colour.to_light_colour();
+    }
+
+    pub fn set_specular_coefficient(&mut self, new_coefficient: f64) {
+        self.specular_coefficient = new_coefficient;
     }
 
     pub fn set_colour_channel(&mut self, channel: &ColourChannel, value: u8) {
         let value: f64 = value as f64 / 255.0;
         match channel {
             ColourChannel::Red => {
-                self.diffuse_k.x = value;
-                self.ambient_k.x = value * self.ambient_coefficient;
+                self.colour.x = value;
             },
             ColourChannel::Green => {
-                self.diffuse_k.y = value;
-                self.ambient_k.y = value * self.ambient_coefficient;
+                self.colour.y = value;
             },
             ColourChannel::Blue => {
-                self.diffuse_k.z = value;
-                self.ambient_k.z = value * self.ambient_coefficient;
+                self.colour.z = value;
             },
         };
     }
@@ -100,12 +85,9 @@ impl Material {
 impl Default for Material {
     fn default() -> Self {
         Self {
+            specular_coefficient: DEFAULT_SPECULAR_COEFFICIENT,
             ambient_coefficient: DEFAULT_AMBIENT_COEFFICIENT,
-            ambient_k: BURGUNDY.to_light_colour()
-                * DEFAULT_AMBIENT_COEFFICIENT,
-            diffuse_k: BURGUNDY.to_light_colour(),
-            specular_k: BURGUNDY.to_light_colour()
-                * DEFAULT_SPECULAR_COEFFICIENT,
+            colour: BURGUNDY.to_light_colour(),
         }
     }
 }

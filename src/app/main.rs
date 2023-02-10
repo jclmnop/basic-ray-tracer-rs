@@ -200,7 +200,7 @@ impl Widgets<AppModel, ()> for AppWidgets {
                                 set_range: args!(0.0, 255.0),
                                 set_value: track!(
                                     model.changed(AppModel::current_index()),
-                                    model.shapes[model.current_index].material.diffuse_k.x * 255.0
+                                    model.shapes[model.current_index].material.colour.x * 255.0
                                 ),
                                 connect_value_changed[
                                     sender: Sender<AppMsg> = sender.clone(),
@@ -225,7 +225,7 @@ impl Widgets<AppModel, ()> for AppWidgets {
                                 set_range: args!(0.0, 255.0),
                                 set_value: track!(
                                     model.changed(AppModel::current_index()),
-                                    model.shapes[model.current_index].material.diffuse_k.y * 255.0
+                                    model.shapes[model.current_index].material.colour.y * 255.0
                                 ),
                                 connect_value_changed[
                                     sender: Sender<AppMsg> = sender.clone(),
@@ -251,7 +251,7 @@ impl Widgets<AppModel, ()> for AppWidgets {
                                 set_range: args!(0.0, 255.0),
                                 set_value: track!(
                                     model.changed(AppModel::current_index()),
-                                    model.shapes[model.current_index].material.diffuse_k.z * 255.0
+                                    model.shapes[model.current_index].material.colour.z * 255.0
                                 ),
                                 connect_value_changed[
                                     sender: Sender<AppMsg> = sender.clone(),
