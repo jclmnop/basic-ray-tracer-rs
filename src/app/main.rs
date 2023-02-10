@@ -1,12 +1,11 @@
+use std::path::Path;
 use gtk::gdk_pixbuf::{Colorspace, Pixbuf};
 use gtk::prelude::*;
 use gtk::{Image, Orientation};
 use image::{EncodableLayout, RgbaImage};
-use ray_tracing::{render, Camera, Sphere, LightColour, IMG_HEIGHT, IMG_SIZE, IMG_WIDTH, Point, ColourChannel};
-use relm4::{send, AppUpdate, Model, RelmApp, Sender, WidgetPlus, Widgets};
+use ray_tracing::{render, Camera, Sphere, IMG_HEIGHT, IMG_SIZE, IMG_WIDTH, Point, ColourChannel};
+use relm4::{send, AppUpdate, Model, RelmApp, Sender, WidgetPlus, Widgets, set_global_css_from_file};
 use tracker::track;
-
-//TODO: figure out why closest intersection is reversed atm
 
 pub fn main() {
     // gtk::init().unwrap();
@@ -31,16 +30,18 @@ pub fn main() {
     };
     model.render();
     let app = RelmApp::new(model);
+    set_global_css_from_file(Path::new("./src/aoo/resources/style.css"));
     app.run();
 }
 
-//TODO: add index to msg for multiple sphere manipulation
 #[derive(Debug)]
 enum AppMsg {
     ChangePosition(Axis, f64),
     AdjustRadius(f64),
     ChangeColour(ColourChannel, f64),
     SelectSphere(usize),
+    MoveX(f64),
+    MoveY(f64),
 }
 
 #[derive(Debug)]
@@ -117,6 +118,15 @@ impl AppUpdate for AppModel {
                 println!("{index}");
                 self.set_current_index(index);
             }
+            AppMsg::MoveX(x) => {
+                self.camera.move_x(x);
+                self.render();
+            }
+            AppMsg::MoveY(y) => {
+                println!("{y}");
+                self.camera.move_y(y);
+                self.render();
+            }
         }
         true
     }
@@ -130,8 +140,8 @@ impl Widgets<AppModel, ()> for AppWidgets {
     view! {
         gtk::ApplicationWindow {
             set_title: Some("Ray Tracer"),
-            set_default_width: 500,
-            set_default_height: 1000,
+            set_default_width: 1000,
+            set_default_height: 1200,
             set_child = Some(&gtk::Box) {
                 set_orientation: gtk::Orientation::Vertical,
                 set_margin_all: 5,
@@ -142,6 +152,7 @@ impl Widgets<AppModel, ()> for AppWidgets {
 
                     set_pixbuf: watch! {Some(&model.image)},
                 },
+                append = &gtk::Separator::new(gtk::Orientation::Horizontal) {},
                 append: settings = &gtk::Box {
                     set_orientation: gtk::Orientation::Horizontal,
                     set_homogeneous: true,
@@ -172,6 +183,9 @@ impl Widgets<AppModel, ()> for AppWidgets {
                             }
                         },
                     },
+                    append = &gtk::Separator::new(gtk::Orientation::Vertical) {
+                        set_halign: gtk::Align::Center,
+                    },
                     append: colour_sliders = &gtk::Box {
                         set_orientation: gtk::Orientation::Horizontal,
                         set_spacing: 10,
@@ -181,6 +195,7 @@ impl Widgets<AppModel, ()> for AppWidgets {
                         //     set_orientation: gtk::Orientation::Vertical,
                             append: red = &gtk::Scale {
                                 set_orientation: gtk::Orientation::Vertical,
+                                set_inverted: true,
                                 set_valign: gtk::Align::Fill,
                                 set_range: args!(0.0, 255.0),
                                 set_value: track!(
@@ -205,6 +220,7 @@ impl Widgets<AppModel, ()> for AppWidgets {
 
                             append: green = &gtk::Scale {
                                 set_orientation: gtk::Orientation::Vertical,
+                                set_inverted: true,
                                 set_valign: gtk::Align::Fill,
                                 set_range: args!(0.0, 255.0),
                                 set_value: track!(
@@ -230,6 +246,7 @@ impl Widgets<AppModel, ()> for AppWidgets {
 
                             append: blue = &gtk::Scale {
                                 set_orientation: gtk::Orientation::Vertical,
+                                set_inverted: true,
                                 set_valign: gtk::Align::Fill,
                                 set_range: args!(0.0, 255.0),
                                 set_value: track!(
@@ -250,12 +267,15 @@ impl Widgets<AppModel, ()> for AppWidgets {
                             // },
                         // },
                     },
+                    append = &gtk::Separator::new(gtk::Orientation::Vertical) {
+                        set_halign: gtk::Align::Center,
+                    },
                     append: radius_controls = &gtk::Box {
                         set_orientation: gtk::Orientation::Vertical,
                         append = &gtk::Button {
                             set_label: "Bigger",
                             connect_clicked(sender) => move |_| {
-                                send!(sender, AppMsg::AdjustRadius(1.0));
+                                send!(sender, AppMsg::AdjustRadius(10.0));
                             },
                         },
                         append = &gtk::Label {
@@ -270,13 +290,14 @@ impl Widgets<AppModel, ()> for AppWidgets {
                         append = &gtk::Button {
                             set_label: "Smaller",
                             connect_clicked(sender) => move |_| {
-                                send!(sender, AppMsg::AdjustRadius(-1.0));
+                                send!(sender, AppMsg::AdjustRadius(-10.0));
                             },
                         },
                     },
 
 
                 },
+                append = &gtk::Separator::new(gtk::Orientation::Horizontal) {},
 
                 append: position_controls = &gtk::Box {
                     set_orientation: gtk::Orientation::Vertical,
@@ -354,6 +375,42 @@ impl Widgets<AppModel, ()> for AppWidgets {
                         },
                     },
                 },
+
+                append = &gtk::Separator::new(gtk::Orientation::Horizontal) {},
+                append: camera_controls = &gtk::Box {
+                    set_orientation: gtk::Orientation::Vertical,
+                    set_halign: gtk::Align::Center,
+                    append: vertical_controls = &gtk::Scale {
+                        set_orientation: gtk::Orientation::Vertical,
+                        set_range: args!(-100.0, 100.0),
+                        set_increments: args!(1.0, 1.0),
+                        set_slider_size_fixed: true,
+                        set_inverted: true,
+                        set_size_request: args!(-1, 100),
+                        connect_value_changed(sender) => move |s| {
+                            let v = s.value();
+                            if v != 0.0 {
+                                send!(sender, AppMsg::MoveY(v));
+                                s.set_value(0.0);
+                            }
+                        },
+                    },
+                    append: horizontal_controls = &gtk::Scale {
+                        set_orientation: gtk::Orientation::Horizontal,
+                        set_range: args!(-100.0, 100.0),
+                        set_increments: args!(1.0, 1.0),
+                        set_slider_size_fixed: true,
+                        set_size_request: args!(100, -1),
+                        connect_value_changed(sender) => move |s| {
+                            let v = s.value();
+                            if v != 0.0 {
+                                send!(sender, AppMsg::MoveX(v));
+                                s.set_value(0.0);
+                            }
+                        },
+                    },
+                },
+                append = &gtk::Separator::new(gtk::Orientation::Horizontal) {},
             }
         }
     }

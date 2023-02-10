@@ -108,18 +108,15 @@ impl Camera {
     }
 
     /// Move camera along the x-axis
-    pub fn move_x(&mut self, delta: i64) {
-        todo!()
+    pub fn move_x(&mut self, delta: f64) {
+        self.view_reference_point = self.view_reference_point + (self.view_right_vector * delta);
+        self.adjust_view();
     }
 
     /// Move camera along the y-axis
-    pub fn move_y(&mut self, delta: i64) {
-        todo!()
-    }
-
-    /// Move camera along the z-axis
-    pub fn move_z(&mut self, delta: i64) {
-        todo!()
+    pub fn move_y(&mut self, delta: f64) {
+        self.view_reference_point = self.view_reference_point + (self.view_up_vector * delta);
+        self.adjust_view();
     }
 
     pub fn camera_props(&self) -> CameraProps {
@@ -137,6 +134,20 @@ impl Camera {
             vuv: self.vuv(),
             vrp: self.vrp(),
         }
+    }
+
+    fn adjust_view(&mut self) {
+        let look_at = Point::new(0.0, 0.0, 0.0);
+        self.view_plane_normal = look_at - self.view_reference_point;
+        self.view_plane_normal.normalise();
+
+        self.view_right_vector = self.view_plane_normal * self.view_up_vector;
+        self.view_right_vector.normalise();
+
+        self.view_up_vector = self.view_right_vector * self.view_plane_normal;
+        self.view_up_vector.normalise();
+
+        self.setup_screen();
     }
 
     fn new_screen(&mut self) {
