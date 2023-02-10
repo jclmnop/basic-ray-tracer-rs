@@ -1,5 +1,10 @@
 use crate::{ColourChannel, LightColour, PixelColour};
 
+// TODO: refactor ambient_k fields etc:
+//          - single colour field
+//          - ambient + specular coefficients
+//          - getter methods for ambient/specular colour which calculate
+
 // Colours
 pub const ZIMA_BLUE: PixelColour = PixelColour {
     x: 26,
@@ -18,9 +23,8 @@ pub const BURNT_ORANGE: PixelColour = PixelColour {
 };
 
 const DEFAULT_AMBIENT_COEFFICIENT: f64 = 0.3;
-const DEFAULT_SPECULAR_COEFFECIENT: f64 = 1.0;
+const DEFAULT_SPECULAR_COEFFICIENT: f64 = 1.0;
 
-// TODO: change all to private
 #[derive(Copy, Clone)]
 pub struct Material {
     ambient_coefficient: f64,
@@ -101,7 +105,7 @@ impl Default for Material {
                 * DEFAULT_AMBIENT_COEFFICIENT,
             diffuse_k: BURGUNDY.to_light_colour(),
             specular_k: BURGUNDY.to_light_colour()
-                * DEFAULT_SPECULAR_COEFFECIENT,
+                * DEFAULT_SPECULAR_COEFFICIENT,
         }
     }
 }
