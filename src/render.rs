@@ -1,5 +1,5 @@
 use crate::shapes::Shape;
-use crate::{Camera, Intersection, PixelColour, Point, Ray, Sphere};
+use crate::{Camera, Intersection, PixelColour, Ray, Sphere};
 use image::{ImageFormat, RgbaImage};
 use rayon::prelude::*;
 use std::cmp::Ordering;
@@ -7,15 +7,13 @@ use std::path::Path;
 
 const BACKGROUND: PixelColour = PixelColour { x: 0, y: 0, z: 0 };
 
-//TODO: render with GDK pixbuf instead (use Relm4?)
+//TODO: use a [[u8; IMG_WIDTH * 4]; IMG_HEIGHT] instead (or IMG_WIDTH * 3 if i remove alpha)
 pub fn render(img: &mut RgbaImage, camera: &Camera, shapes: &Vec<Sphere>) {
     img.enumerate_rows_mut()
         .par_bridge()
         .into_par_iter()
         .for_each(|(j, row)| {
             row.enumerate()
-                // .par_bridge()
-                // .into_par_iter()
                 .for_each(|(i, px)| {
                     let new_colour =
                         calculate_pixel_colour(i, j, camera, &shapes);
