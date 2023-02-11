@@ -1,4 +1,6 @@
 #![allow(dead_code, unused_variables)]
+
+use gtk::pango::ffi::pango_is_zero_width;
 use crate::{LightSource, Point, Vector3D, IMG_HEIGHT, IMG_SIZE, IMG_WIDTH};
 use rayon::prelude::*;
 
@@ -14,6 +16,7 @@ pub struct Camera {
     img_width: usize,
     scale: f64,
     light_source: LightSource,
+    fov: f64,
 }
 
 pub struct CameraParams {
@@ -24,18 +27,20 @@ pub struct CameraParams {
     pub img_width: usize,
     pub scale: f64,
     pub light_source: LightSource,
+    pub fov: f64,
 }
 
 impl Default for CameraParams {
     fn default() -> Self {
         Self {
-            view_reference_point: Point::new(0.0, 0.0, -(IMG_SIZE as f64)),
+            view_reference_point: Point::new(0.0, 0.0, -(IMG_SIZE as f64) * 1.5),
             approx_view_up_vector: Vector3D::new(0.0, 1.0, 0.0),
-            focal_length: 500.0,
+            focal_length: 100.0,
             img_height: IMG_HEIGHT as usize,
             img_width: IMG_WIDTH as usize,
             scale: 1.0,
             light_source: LightSource::default(),
+            fov: 45.0,
         }
     }
 }
@@ -51,6 +56,10 @@ pub struct CameraProps {
     pub vuv: Vector3D,
     pub vrp: Point,
     pub focal_length: f64,
+    pub fov: f64,
+    pub half_width: f64,
+    pub half_height: f64,
+    pub pixel_size: f64,
 }
 
 // TODO: figure out how to move along x/y/z axes relative to the current
@@ -84,6 +93,7 @@ impl Camera {
             img_width: params.img_width,
             scale: params.scale,
             light_source: LightSource::default(),
+            fov: params.fov
         };
         camera.new_screen();
 
@@ -128,6 +138,11 @@ impl Camera {
         let screen_center_point =
             self.view_reference_point + distance_from_projection_point;
 
+        let (half_width, half_height) = self.half_view();
+
+        let pixel_size = self.pixel_size(half_width);
+        println!("\n\thalf_width: {half_width}\n\thalf_height: {half_height}\n\tpixel size: {pixel_size}");
+
         CameraProps {
             screen_center_point,
             img_width: self.img_width,
@@ -137,6 +152,10 @@ impl Camera {
             vuv: self.vuv(),
             vrp: self.vrp(),
             focal_length: self.focal_length,
+            fov: self.fov,
+            half_width,
+            half_height,
+            pixel_size
         }
     }
 
@@ -187,7 +206,7 @@ impl Camera {
     ) -> (Point, Vector3D) {
         let pixel_point = Self::calc_pixel_point(i, j, camera_props);
         let pixel_direction =
-            Self::calc_pixel_direction(&camera_props.vrp, &pixel_point, &camera_props);
+            Self::calc_pixel_direction(&camera_props.vrp, &pixel_point);
         (pixel_point, pixel_direction)
     }
 
@@ -200,44 +219,48 @@ impl Camera {
         let j = j as f64;
         let width = camera_props.img_width as f64;
         let height = camera_props.img_height as f64;
+        let pixel_size = camera_props.pixel_size;
+        let scale = camera_props.scale;
 
         // TODO: I had to invert both of these so that +x is to the right, and
         //       +y is up, what am I doing wrong?
-        let u = ((width - i) - width / 2.0) * camera_props.scale;
-        let v = ((height - j) - height / 2.0) * camera_props.scale;
+        let u = ((width - i) - width / 2.0) * camera_props.scale * pixel_size;
+        let v = ((height - j) - height / 2.0) * camera_props.scale * pixel_size;
 
 
-        Self::perspective_transform(u, v, camera_props)
-        // camera_props.screen_center_point
-        //     + (camera_props.vrv * u)
-        //     + (camera_props.vuv * v)
+        camera_props.screen_center_point
+            + (camera_props.vrv * u)
+            + (camera_props.vuv * v)
     }
 
     fn calc_pixel_direction(
         view_reference_point: &Point,
         pixel_point: &Point,
-        camera_props: &CameraProps,
     ) -> Vector3D {
         let mut direction = *pixel_point - *view_reference_point;
         direction.normalise();
         direction
     }
 
-    fn perspective_transform(
-        u: f64,
-        v: f64,
-        camera_props: &CameraProps
-    ) -> Point {
+    fn aspect_ratio(&self) -> f64 {
+        self.img_width as f64 / self.img_height as f64
+    }
 
-        let u_transform = camera_props.focal_length / camera_props.img_width as f64;
-        let v_transform = camera_props.focal_length / camera_props.img_height as f64;
+    /// (half_width, half_height)
+    fn half_view(&self) -> (f64, f64) {
+        let aspect = self.aspect_ratio();
+        // tan(deg) = O / A
+        let half_view = (self.fov.to_radians() / 2.0).tan() * self.focal_length;
 
-        let u = u * u_transform;
-        let v = v * v_transform;
+        if aspect >= 1.0 {
+            (half_view, half_view / aspect)
+        } else {
+            (half_view * aspect, half_view)
+        }
+    }
 
-        camera_props.screen_center_point
-            + (camera_props.vrv * u)
-            + (camera_props.vuv * v)
+    fn pixel_size(&self, half_width: f64) -> f64 {
+        (half_width * 2.0) / self.img_width as f64
     }
 }
 
