@@ -19,7 +19,7 @@ pub const BURNT_ORANGE: PixelColour = PixelColour {
     z: 0,
 };
 
-const DEFAULT_AMBIENT_COEFFICIENT: f64 = 0.1;
+const DEFAULT_AMBIENT_COEFFICIENT: f64 = 0.5;
 const DEFAULT_SPECULAR_COEFFICIENT: f64 = 1.0;
 
 #[derive(Copy, Clone)]

@@ -29,17 +29,19 @@ pub struct CameraParams {
 impl Default for CameraParams {
     fn default() -> Self {
         Self {
-            view_reference_point: Point::new(0.0, 0.0, -(IMG_SIZE as f64 * 1.7)),
+            view_reference_point: Point::new(0.0, 0.0, -(IMG_SIZE as f64)),
             approx_view_up_vector: Vector3D::new(0.0, 1.0, 0.0),
-            focal_length: IMG_SIZE as f64,
+            focal_length: 500.0,
             img_height: IMG_HEIGHT as usize,
             img_width: IMG_WIDTH as usize,
-            scale: 0.5,
+            scale: 1.0,
             light_source: LightSource::default(),
         }
     }
 }
 
+/// Just used to pass camera properties to associated functions during parallel
+/// iteration, to avoid headaches regarding immutable + mutable references to self
 pub struct CameraProps {
     pub screen_center_point: Point,
     pub img_width: usize,
@@ -48,6 +50,7 @@ pub struct CameraProps {
     pub vrv: Vector3D,
     pub vuv: Vector3D,
     pub vrp: Point,
+    pub focal_length: f64,
 }
 
 // TODO: figure out how to move along x/y/z axes relative to the current
@@ -133,6 +136,7 @@ impl Camera {
             vrv: self.vrv(),
             vuv: self.vuv(),
             vrp: self.vrp(),
+            focal_length: self.focal_length,
         }
     }
 
@@ -183,7 +187,7 @@ impl Camera {
     ) -> (Point, Vector3D) {
         let pixel_point = Self::calc_pixel_point(i, j, camera_props);
         let pixel_direction =
-            Self::calc_pixel_direction(&camera_props.vrp, &pixel_point);
+            Self::calc_pixel_direction(&camera_props.vrp, &pixel_point, &camera_props);
         (pixel_point, pixel_direction)
     }
 
@@ -202,16 +206,38 @@ impl Camera {
         let u = ((width - i) - width / 2.0) * camera_props.scale;
         let v = ((height - j) - height / 2.0) * camera_props.scale;
 
-        camera_props.screen_center_point
-            + (camera_props.vrv * u)
-            + (camera_props.vuv * v)
+
+        Self::perspective_transform(u, v, camera_props)
+        // camera_props.screen_center_point
+        //     + (camera_props.vrv * u)
+        //     + (camera_props.vuv * v)
     }
 
     fn calc_pixel_direction(
         view_reference_point: &Point,
         pixel_point: &Point,
+        camera_props: &CameraProps,
     ) -> Vector3D {
-        *pixel_point - *view_reference_point
+        let mut direction = *pixel_point - *view_reference_point;
+        direction.normalise();
+        direction
+    }
+
+    fn perspective_transform(
+        u: f64,
+        v: f64,
+        camera_props: &CameraProps
+    ) -> Point {
+
+        let u_transform = camera_props.focal_length / camera_props.img_width as f64;
+        let v_transform = camera_props.focal_length / camera_props.img_height as f64;
+
+        let u = u * u_transform;
+        let v = v * v_transform;
+
+        camera_props.screen_center_point
+            + (camera_props.vrv * u)
+            + (camera_props.vuv * v)
     }
 }
 
@@ -276,6 +302,7 @@ mod tests {
             vrv: camera.vrv(),
             vuv: camera.vuv(),
             vrp: camera.vrp(),
+            focal_length: camera.focal_length,
         };
         let point_center_pixel =
             Camera::calc_pixel_point(i_center, j_center, &props);
