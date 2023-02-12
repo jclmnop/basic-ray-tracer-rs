@@ -1,5 +1,5 @@
 #![allow(dead_code, unused_variables)]
-use crate::{LightSource, Point, Vector3D, IMG_HEIGHT, IMG_SIZE, IMG_WIDTH};
+use crate::{LightSource, Point, Vector3D, IMG_HEIGHT, IMG_SIZE, IMG_WIDTH, timeit};
 use rayon::prelude::*;
 
 pub struct Camera {
@@ -118,6 +118,7 @@ impl Camera {
         self.light_source
     }
 
+    //TODO: Alt-Az controls
     /// Move camera along the x-axis
     pub fn move_x(&mut self, delta: f64) {
         self.view_reference_point = self.view_reference_point + (self.view_right_vector * delta);
@@ -156,7 +157,6 @@ impl Camera {
         }
     }
 
-    // TODO: replace with matrix transformations?
     fn adjust_view(&mut self) {
         let look_at = Point::new(0.0, 0.0, 0.0);
         self.view_plane_normal = look_at - self.view_reference_point;
@@ -181,6 +181,7 @@ impl Camera {
         self.setup_screen();
     }
 
+    // TODO: replace with matrix transformations?
     fn setup_screen(&mut self) {
         // This is just a way to get around the issue of passing an immutable
         // reference to self into methods during par_iter_mut()
@@ -195,6 +196,27 @@ impl Camera {
                 row.push(pixel_props);
             }
         });
+    }
+
+    fn aspect_ratio(&self) -> f64 {
+        self.img_width as f64 / self.img_height as f64
+    }
+
+    /// (half_width, half_height)
+    fn half_view(&self) -> (f64, f64) {
+        let aspect = self.aspect_ratio();
+        // tan(deg) = O / A
+        let half_view = (self.fov.to_radians() / 2.0).tan() * self.focal_length;
+
+        if aspect >= 1.0 {
+            (half_view, half_view / aspect)
+        } else {
+            (half_view * aspect, half_view)
+        }
+    }
+
+    fn pixel_size(&self, half_width: f64) -> f64 {
+        (half_width * 2.0) / self.img_width as f64
     }
 
     fn calc_pixel_props(
@@ -238,27 +260,6 @@ impl Camera {
         let mut direction = *pixel_point - *view_reference_point;
         direction.normalise();
         direction
-    }
-
-    fn aspect_ratio(&self) -> f64 {
-        self.img_width as f64 / self.img_height as f64
-    }
-
-    /// (half_width, half_height)
-    fn half_view(&self) -> (f64, f64) {
-        let aspect = self.aspect_ratio();
-        // tan(deg) = O / A
-        let half_view = (self.fov.to_radians() / 2.0).tan() * self.focal_length;
-
-        if aspect >= 1.0 {
-            (half_view, half_view / aspect)
-        } else {
-            (half_view * aspect, half_view)
-        }
-    }
-
-    fn pixel_size(&self, half_width: f64) -> f64 {
-        (half_width * 2.0) / self.img_width as f64
     }
 }
 

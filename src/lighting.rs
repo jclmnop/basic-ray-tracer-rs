@@ -11,7 +11,7 @@ pub struct LightSource {
 impl Default for LightSource {
     fn default() -> Self {
         Self {
-            position: Point::new(-100.0, 100.0, -250.0),
+            position: Point::new(-500.0, -350.0, -350.0),
             colour: LightColour::new(1.0, 1.0, 1.0),
         }
     }

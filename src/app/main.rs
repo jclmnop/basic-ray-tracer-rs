@@ -1,13 +1,19 @@
 use std::path::Path;
+use std::env;
 use gtk::gdk_pixbuf::{Colorspace, Pixbuf};
 use gtk::prelude::*;
 use gtk::{Image, Orientation};
 use image::{EncodableLayout, RgbaImage};
-use ray_tracing::{render, Camera, Sphere, IMG_HEIGHT, IMG_SIZE, IMG_WIDTH, Point, ColourChannel, ZIMA_BLUE, BURNT_ORANGE};
+use ray_tracing::{render, Camera, Sphere, IMG_HEIGHT, IMG_SIZE, IMG_WIDTH, Point, ColourChannel, ZIMA_BLUE, BURNT_ORANGE, timeit};
 use relm4::{send, AppUpdate, Model, RelmApp, Sender, WidgetPlus, Widgets, set_global_css_from_file};
 use tracker::track;
+use env_logger::Builder;
+
+const RENDER_WARN_MS: u128 = 40;
+const CAMERA_WARN_MS: u128 = 5;
 
 pub fn main() {
+    setup_logging();
     let mut model = AppModel {
         shapes: vec![
             Sphere::default(),
@@ -33,6 +39,13 @@ pub fn main() {
     let app = RelmApp::new(model);
     set_global_css_from_file(Path::new("./src/aoo/resources/style.css"));
     app.run();
+}
+
+fn setup_logging() {
+    let mut log_builder = Builder::new();
+    log_builder.filter_level(log::LevelFilter::Warn);
+    log_builder.parse_env("LOG");
+    log_builder.init();
 }
 
 #[derive(Debug)]
@@ -73,16 +86,23 @@ impl Model for AppModel {
 
 impl AppModel {
     pub fn render(&mut self) {
-        render(&mut self.canvas, &self.camera, &self.shapes);
-        self.image = Pixbuf::from_bytes(
-            &self.canvas.as_bytes().into(),
-            Colorspace::Rgb,
-            true,
-            8,
-            IMG_SIZE as i32,
-            IMG_SIZE as i32,
-            (IMG_SIZE * 4) as i32,
-        );
+        let render_time = timeit!({
+            render(&mut self.canvas, &self.camera, &self.shapes);
+            self.image = Pixbuf::from_bytes(
+                &self.canvas.as_bytes().into(),
+                Colorspace::Rgb,
+                true,
+                8,
+                IMG_SIZE as i32,
+                IMG_SIZE as i32,
+                (IMG_SIZE * 4) as i32,
+            );
+        }).as_millis();
+        if render_time > RENDER_WARN_MS {
+            log::warn!("Render time: {render_time}ms");
+        } else {
+            log::info!("Render time: {render_time}ms");
+        }
     }
 }
 
@@ -111,21 +131,31 @@ impl AppUpdate for AppModel {
             }
             AppMsg::ChangeColour(channel, new_colour) => {
                 let i = self.current_index;
-                println!("{new_colour}");
+                // println!("{new_colour}");
                 self.shapes[i].set_colour_channel(&channel, new_colour as u8);
                 self.render();
             }
             AppMsg::SelectSphere(index) => {
-                println!("{index}");
+                // println!("{index}");
                 self.set_current_index(index);
             }
             AppMsg::MoveX(x) => {
-                self.camera.move_x(x);
+                let camera_setup_time = timeit!({self.camera.move_x(x);}).as_millis();
+                if camera_setup_time > CAMERA_WARN_MS {
+                    log::warn!("Camera Setup Time: {camera_setup_time}ms");
+                } else {
+                    log::info!("Camera Setup Time: {camera_setup_time}ms");
+                }
                 self.render();
             }
             AppMsg::MoveY(y) => {
-                println!("{y}");
-                self.camera.move_y(y);
+                // println!("{y}");
+                let camera_setup_time = timeit!({self.camera.move_y(y);}).as_millis();
+                if camera_setup_time > CAMERA_WARN_MS {
+                    log::warn!("Camera Setup Time: {camera_setup_time}ms");
+                } else {
+                    log::info!("Camera Setup Time: {camera_setup_time}ms");
+                }
                 self.render();
             }
         }
@@ -398,6 +428,19 @@ impl Widgets<AppModel, ()> for AppWidgets {
                             }
                         },
                     },
+                },
+
+                //TODO: add reset button
+                append = &gtk::Label {
+                    set_margin_all: 5,
+                    set_label: watch! {
+                        &format!(
+                            "Camera Coords ({:.0}, {:.0}, {:.0})",
+                            model.camera.vrp().x,
+                            model.camera.vrp().y,
+                            model.camera.vrp().z,
+                        )
+                    }
                 },
                 append = &gtk::Separator::new(gtk::Orientation::Horizontal) {},
             }
