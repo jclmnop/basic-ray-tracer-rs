@@ -19,7 +19,7 @@ pub const BURNT_ORANGE: PixelColour = PixelColour {
     z: 0,
 };
 
-const DEFAULT_AMBIENT_COEFFICIENT: f64 = 0.5;
+const DEFAULT_AMBIENT_COEFFICIENT: f64 = 0.3;
 const DEFAULT_SPECULAR_COEFFICIENT: f64 = 1.0;
 
 #[derive(Copy, Clone)]
@@ -32,15 +32,21 @@ pub struct Material {
 impl Material {
     pub fn new(
         ambient_coefficient: f64,
-        diffuse: LightColour,
+        colour: LightColour,
         specular_coefficient: f64,
     ) -> Self {
         Self {
             ambient_coefficient,
             specular_coefficient,
-            colour: diffuse,
+            colour,
         }
     }
+    
+    pub fn default_with_colour(colour: PixelColour) -> Self {
+        let mut material = Self::default();
+        material.colour = colour.to_light_colour();
+        material
+    } 
 
     pub fn ambient_k(&self) -> LightColour {
         self.colour * self.ambient_coefficient

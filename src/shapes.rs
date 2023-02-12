@@ -36,6 +36,21 @@ impl Sphere {
             material,
         }
     }
+    
+    pub fn new_with_colour(c: Point, r: f64, colour: PixelColour) -> Self {
+        let material = Material::default_with_colour(colour);
+        Sphere {
+            center: c,
+            radius: r,
+            material
+        }
+    }
+
+    pub fn default_with_pos(c: Point) -> Self {
+        let mut sphere = Self::default();
+        sphere.center = c;
+        sphere
+    }
 
     pub fn adjust_radius(&mut self, delta: f64) {
         self.radius += delta;
@@ -63,12 +78,6 @@ impl Sphere {
 
     pub fn set_colour_channel(&mut self, channel: &ColourChannel, value: u8) {
         self.material.set_colour_channel(channel, value);
-    }
-
-    pub fn default_with_pos(c: Point) -> Self {
-        let mut sphere = Self::default();
-        sphere.center = c;
-        sphere
     }
 }
 

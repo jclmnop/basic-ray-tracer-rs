@@ -1,6 +1,4 @@
 #![allow(dead_code, unused_variables)]
-
-use gtk::pango::ffi::pango_is_zero_width;
 use crate::{LightSource, Point, Vector3D, IMG_HEIGHT, IMG_SIZE, IMG_WIDTH};
 use rayon::prelude::*;
 
@@ -33,7 +31,7 @@ pub struct CameraParams {
 impl Default for CameraParams {
     fn default() -> Self {
         Self {
-            view_reference_point: Point::new(0.0, 0.0, -(IMG_SIZE as f64) * 1.5),
+            view_reference_point: Point::new(0.0, 0.0, -(IMG_SIZE as f64) * 1.0),
             approx_view_up_vector: Vector3D::new(0.0, 1.0, 0.0),
             focal_length: 100.0,
             img_height: IMG_HEIGHT as usize,

@@ -3,7 +3,7 @@ use gtk::gdk_pixbuf::{Colorspace, Pixbuf};
 use gtk::prelude::*;
 use gtk::{Image, Orientation};
 use image::{EncodableLayout, RgbaImage};
-use ray_tracing::{render, Camera, Sphere, IMG_HEIGHT, IMG_SIZE, IMG_WIDTH, Point, ColourChannel};
+use ray_tracing::{render, Camera, Sphere, IMG_HEIGHT, IMG_SIZE, IMG_WIDTH, Point, ColourChannel, PixelColour, ZIMA_BLUE, BURNT_ORANGE};
 use relm4::{send, AppUpdate, Model, RelmApp, Sender, WidgetPlus, Widgets, set_global_css_from_file};
 use tracker::track;
 
@@ -13,6 +13,8 @@ pub fn main() {
             Sphere::default(),
             Sphere::default_with_pos(Point::new(100.0, 100.0, 200.0)),
             Sphere::default_with_pos(Point::new(200.0, 200.0, 400.0)),
+            Sphere::new_with_colour(Point::new(-150.0, -50.0, 200.0), 50.0, ZIMA_BLUE),
+            Sphere::new_with_colour(Point::new(34.0, 100.0, -150.0), 50.0, BURNT_ORANGE),
         ],
         camera: Camera::default(),
         canvas: RgbaImage::new(IMG_WIDTH, IMG_HEIGHT),
@@ -180,6 +182,20 @@ impl Widgets<AppModel, ()> for AppWidgets {
                             set_group: Some(&root_button),
                             connect_toggled(sender) => move |_| {
                                 send!(sender, AppMsg::SelectSphere(2));
+                            }
+                        },
+                        append = &gtk::CheckButton {
+                            set_label: Some("Sphere 4"),
+                            set_group: Some(&root_button),
+                            connect_toggled(sender) => move |_| {
+                                send!(sender, AppMsg::SelectSphere(3));
+                            }
+                        },
+                        append = &gtk::CheckButton {
+                            set_label: Some("Sphere 5"),
+                            set_group: Some(&root_button),
+                            connect_toggled(sender) => move |_| {
+                                send!(sender, AppMsg::SelectSphere(4));
                             }
                         },
                     },
