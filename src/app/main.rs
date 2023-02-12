@@ -3,7 +3,7 @@ use gtk::gdk_pixbuf::{Colorspace, Pixbuf};
 use gtk::prelude::*;
 use gtk::{Image, Orientation};
 use image::{EncodableLayout, RgbaImage};
-use ray_tracing::{render, Camera, Sphere, IMG_HEIGHT, IMG_SIZE, IMG_WIDTH, Point, ColourChannel, PixelColour, ZIMA_BLUE, BURNT_ORANGE};
+use ray_tracing::{render, Camera, Sphere, IMG_HEIGHT, IMG_SIZE, IMG_WIDTH, Point, ColourChannel, ZIMA_BLUE, BURNT_ORANGE};
 use relm4::{send, AppUpdate, Model, RelmApp, Sender, WidgetPlus, Widgets, set_global_css_from_file};
 use tracker::track;
 

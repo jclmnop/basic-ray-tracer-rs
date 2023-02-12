@@ -139,7 +139,6 @@ impl Camera {
         let (half_width, half_height) = self.half_view();
 
         let pixel_size = self.pixel_size(half_width);
-        println!("\n\thalf_width: {half_width}\n\thalf_height: {half_height}\n\tpixel size: {pixel_size}");
 
         CameraProps {
             screen_center_point,
@@ -157,6 +156,7 @@ impl Camera {
         }
     }
 
+    // TODO: replace with matrix transformations?
     fn adjust_view(&mut self) {
         let look_at = Point::new(0.0, 0.0, 0.0);
         self.view_plane_normal = look_at - self.view_reference_point;
