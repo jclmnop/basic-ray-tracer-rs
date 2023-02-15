@@ -175,6 +175,24 @@ impl <T: VectorNum> std::ops::Mul<Vector<T>> for Matrix3x3<T> {
     }
 }
 
+//TODO: Matrix x Matrix multiplication
+
+pub fn matrix_mul<T:VectorNum>(left: Matrix3x3<T>, right: Matrix3x3<T>) -> Matrix3x3<T> {
+    let x = left * right[0];
+    let y = left * right[1];
+    let z = left * right[2];
+
+    [x, y, z]
+}
+
+pub fn id_matrix() -> Matrix3x3<f64> {
+    [
+        Vector::new(1.0, 0.0, 0.0),
+        Vector::new(0.0, 1.0, 0.0),
+        Vector::new(0.0, 0.0, 1.0),
+    ]
+}
+
 impl<T: VectorNum> std::ops::Mul<Vector<T>> for Vector<T> {
     type Output = Self;
 
@@ -288,7 +306,7 @@ impl<T: VectorNum> Display for Vector<T> {
 
 #[cfg(test)]
 mod tests {
-    use crate::Vector;
+    use crate::{id_matrix, matrix_mul, Vector};
 
     #[test]
     fn cross_product() {
@@ -345,7 +363,7 @@ mod tests {
     }
 
     #[test]
-    fn matrix_multiplication() {
+    fn matrix_vec_multiplication() {
         let matrix = [
             Vector::new(1.0, 0.0, 2.0),
             Vector::new(2.0, 1.0, 3.0),
@@ -355,5 +373,30 @@ mod tests {
         let v = Vector::new(3.0, 6.0, 1.0);
 
         assert_eq!(matrix * v, Vector::new(16.0, 6.0, 28.0));
+        assert_eq!(id_matrix() * v, v);
+    }
+
+    #[test]
+    fn matrix_multiplication() {
+        let matrix1 = [
+            Vector::new(1.0, 0.0, 2.0),
+            Vector::new(2.0, 1.0, 3.0),
+            Vector::new(1.0, 0.0, 4.0),
+        ];
+        let matrix2 = [
+            Vector::new(9.0, 6.0, 5.0),
+            Vector::new(5.0, 7.0, 8.0),
+            Vector::new(7.0, 8.0, 6.0),
+        ];
+        let result = matrix_mul(matrix1, matrix2);
+        let expected_result = [
+            Vector::new(26.0, 6.0, 56.0),
+            Vector::new(27.0, 7.0, 63.0),
+            Vector::new(29.0, 8.0, 62.0),
+        ];
+
+        assert_eq!(expected_result, result);
+        assert_eq!(matrix_mul(id_matrix(), matrix2), matrix2);
+        assert_eq!(matrix_mul(matrix2, id_matrix()), matrix2);
     }
 }
