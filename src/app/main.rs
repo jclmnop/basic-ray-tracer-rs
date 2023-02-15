@@ -161,7 +161,7 @@ impl AppUpdate for AppModel {
                 self.render();
             }
             AppMsg::ResetCamera => {
-                self.camera.set_vrp(CameraParams::default().view_reference_point);
+                self.camera.reset_vrp();
                 self.render();
             }
         }
@@ -440,10 +440,12 @@ impl Widgets<AppModel, ()> for AppWidgets {
                     set_margin_all: 5,
                     set_label: watch! {
                         &format!(
-                            "Camera Coords ({:.0}, {:.0}, {:.0})",
+                            "Camera Coords ({:.0}, {:.0}, {:.0})\nRotation: ({:.0}, {:.0})",
                             model.camera.vrp().x,
                             model.camera.vrp().y,
                             model.camera.vrp().z,
+                            model.camera.h_rotation,
+                            model.camera.v_rotation,
                         )
                     }
                 },

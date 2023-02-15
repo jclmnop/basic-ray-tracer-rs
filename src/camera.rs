@@ -1,5 +1,5 @@
 #![allow(dead_code, unused_variables)]
-use crate::{LightSource, Point, Vector3D, IMG_HEIGHT, IMG_SIZE, IMG_WIDTH, timeit, Matrix3x3, Vector};
+use crate::{LightSource, Point, Vector3D, IMG_HEIGHT, IMG_SIZE, IMG_WIDTH, Matrix3x3, Vector, matrix_mul};
 use rayon::prelude::*;
 
 pub struct Camera {
@@ -15,6 +15,8 @@ pub struct Camera {
     scale: f64,
     light_source: LightSource,
     fov: f64,
+    pub h_rotation: f64,
+    pub v_rotation: f64,
 }
 
 pub struct CameraParams {
@@ -45,6 +47,7 @@ impl Default for CameraParams {
 
 /// Just used to pass camera properties to associated functions during parallel
 /// iteration, to avoid headaches regarding immutable + mutable references to self
+#[derive(Debug)]
 pub struct CameraProps {
     pub screen_center_point: Point,
     pub img_width: usize,
@@ -90,15 +93,19 @@ impl Camera {
             img_width: params.img_width,
             scale: params.scale,
             light_source: LightSource::default(),
-            fov: params.fov
+            fov: params.fov,
+            h_rotation: 0.0,
+            v_rotation: 0.0,
         };
         camera.new_screen();
+        // println!("h: {}, v: {}", camera.h_rotation, camera.v_rotation);
+        // println!("BEFORE:\n{:#?}", camera.camera_props());
 
         camera
     }
 
     pub fn vrp(&self) -> Point {
-        self.view_reference_point
+        self.composite_rotation_matrix() * self.view_reference_point
     }
 
     pub fn vpn(&self) -> Vector3D {
@@ -117,23 +124,37 @@ impl Camera {
         self.light_source
     }
 
-    pub fn set_vrp(&mut self, new_vrp: Point) {
-        self.view_reference_point = new_vrp;
+    pub fn reset_vrp(&mut self) {
+        self.view_up_vector = Vector::new(0.0, 1.0, 0.0);
+        self.h_rotation = 0.0;
+        self.v_rotation = 0.0;
         self.adjust_view();
     }
 
     //TODO: Rotation matrices
     /// Move camera along the x-axis
     pub fn move_x(&mut self, degrees: f64) {
-        let rotation_matrix = self.horizontal_rotation_matrix(degrees);
-        self.view_reference_point = rotation_matrix * self.view_reference_point;
+        // let rotation_matrix = self.horizontal_rotation_matrix(degrees);
+        // self.view_reference_point = rotation_matrix * self.view_reference_point;
+        self.h_rotation += degrees;
+        if self.h_rotation > 360.0 {
+            self.h_rotation -= 360.0;
+        } else if self.h_rotation < 0.0 {
+            self.h_rotation += 360.0;
+        }
         self.adjust_view();
     }
 
     /// Move camera along the y-axis
     pub fn move_y(&mut self, degrees: f64) {
-        let rotation_matrix = self.vertical_rotation_matrix(degrees);
-        self.view_reference_point = rotation_matrix * self.view_reference_point;
+        // let rotation_matrix = self.vertical_rotation_matrix(degrees);
+        // self.view_reference_point = rotation_matrix * self.view_reference_point;
+        self.v_rotation += degrees;
+        if self.v_rotation > 90.0 {
+            self.v_rotation = 90.0;
+        } else if self.v_rotation < -90.0 {
+            self.v_rotation = -90.0;
+        }
         self.adjust_view();
     }
 
@@ -141,7 +162,7 @@ impl Camera {
         let distance_from_projection_point =
             self.view_plane_normal * self.focal_length;
         let screen_center_point =
-            self.view_reference_point + distance_from_projection_point;
+            self.vrp() + distance_from_projection_point;
 
         let (half_width, half_height) = self.half_view();
 
@@ -163,12 +184,20 @@ impl Camera {
         }
     }
 
+    fn composite_rotation_matrix(&self) -> Matrix3x3<f64> {
+        matrix_mul(
+            self.horizontal_rotation_matrix(),
+            self.vertical_rotation_matrix(),
+        )
+    }
+
     fn adjust_view(&mut self) {
         let look_at = Point::new(0.0, 0.0, 0.0);
-        self.view_plane_normal = look_at - self.view_reference_point;
+        let approx_view_up = self.view_up_vector;//Vector3D::new(0.0, 1.0, 0.0);
+        self.view_plane_normal = look_at - self.vrp();
         self.view_plane_normal.normalise();
 
-        self.view_right_vector = self.view_plane_normal * self.view_up_vector;
+        self.view_right_vector = self.view_plane_normal * approx_view_up;//self.view_up_vector;
         self.view_right_vector.normalise();
 
         self.view_up_vector = self.view_right_vector * self.view_plane_normal;
@@ -268,8 +297,8 @@ impl Camera {
         direction
     }
 
-    fn vertical_rotation_matrix(&self, degrees: f64) -> Matrix3x3<f64> {
-        let degrees = degrees.to_radians();
+    fn vertical_rotation_matrix(&self) -> Matrix3x3<f64> {
+        let degrees = self.v_rotation.to_radians();
         [
             Vector::new(1.0, 0.0, 0.0),
             Vector::new(0.0, degrees.cos(), degrees.sin()),
@@ -277,8 +306,8 @@ impl Camera {
         ]
     }
 
-    fn horizontal_rotation_matrix(&self, degrees: f64) -> Matrix3x3<f64> {
-        let degrees = degrees.to_radians();
+    fn horizontal_rotation_matrix(&self) -> Matrix3x3<f64> {
+        let degrees = self.h_rotation.to_radians();
         [
             Vector::new(degrees.cos(), 0.0, -degrees.sin()),
             Vector::new(0.0, 1.0, 0.0),
@@ -298,7 +327,7 @@ impl Default for Camera {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::timeit;
+    // use crate::timeit;
     const IMG_HEIGHT: u32 = 1000;
     const IMG_WIDTH: u32 = 1000;
     const PIXEL_SCALE: f64 = 1.0;
@@ -321,7 +350,7 @@ mod tests {
     fn horizontal_rotation() {
         let mut camera = test_camera();
         camera.move_x(10.0);
-        assert_eq!(0.0, camera.view_reference_point.y);
+        assert_eq!(0.0, camera.vrp().y);
     }
 
     //
