@@ -4,7 +4,7 @@ use gtk::gdk_pixbuf::{Colorspace, Pixbuf};
 use gtk::prelude::*;
 use gtk::{Image, Orientation};
 use image::{EncodableLayout, RgbaImage};
-use ray_tracing::{render, Camera, Sphere, IMG_HEIGHT, IMG_SIZE, IMG_WIDTH, Point, ColourChannel, ZIMA_BLUE, BURNT_ORANGE, timeit};
+use ray_tracing::{render, Camera, CameraParams, Sphere, IMG_HEIGHT, IMG_SIZE, IMG_WIDTH, Point, ColourChannel, ZIMA_BLUE, BURNT_ORANGE, timeit};
 use relm4::{send, AppUpdate, Model, RelmApp, Sender, WidgetPlus, Widgets, set_global_css_from_file};
 use tracker::track;
 use env_logger::Builder;
@@ -56,6 +56,7 @@ enum AppMsg {
     SelectSphere(usize),
     MoveX(f64),
     MoveY(f64),
+    ResetCamera,
 }
 
 #[derive(Debug)]
@@ -140,6 +141,7 @@ impl AppUpdate for AppModel {
                 self.set_current_index(index);
             }
             AppMsg::MoveX(x) => {
+                println!("MoveX: {x}");
                 let camera_setup_time = timeit!({self.camera.move_x(x);}).as_millis();
                 if camera_setup_time > CAMERA_WARN_MS {
                     log::warn!("Camera Setup Time: {camera_setup_time}ms");
@@ -149,13 +151,17 @@ impl AppUpdate for AppModel {
                 self.render();
             }
             AppMsg::MoveY(y) => {
-                // println!("{y}");
+                println!("MoveY: {y}");
                 let camera_setup_time = timeit!({self.camera.move_y(y);}).as_millis();
                 if camera_setup_time > CAMERA_WARN_MS {
                     log::warn!("Camera Setup Time: {camera_setup_time}ms");
                 } else {
                     log::info!("Camera Setup Time: {camera_setup_time}ms");
                 }
+                self.render();
+            }
+            AppMsg::ResetCamera => {
+                self.camera.set_vrp(CameraParams::default().view_reference_point);
                 self.render();
             }
         }
@@ -172,8 +178,8 @@ impl Widgets<AppModel, ()> for AppWidgets {
     view! {
         gtk::ApplicationWindow {
             set_title: Some("Ray Tracer"),
-            set_default_width: 1000,
-            set_default_height: 1200,
+            set_default_width: 800,
+            set_default_height: 1000,
             set_child = Some(&gtk::Box) {
                 set_orientation: gtk::Orientation::Vertical,
                 set_margin_all: 5,
@@ -401,7 +407,7 @@ impl Widgets<AppModel, ()> for AppWidgets {
                     set_halign: gtk::Align::Center,
                     append: vertical_controls = &gtk::Scale {
                         set_orientation: gtk::Orientation::Vertical,
-                        set_range: args!(-100.0, 100.0),
+                        set_range: args!(-10.0, 10.0),
                         set_increments: args!(1.0, 1.0),
                         set_slider_size_fixed: true,
                         set_inverted: true,
@@ -416,7 +422,7 @@ impl Widgets<AppModel, ()> for AppWidgets {
                     },
                     append: horizontal_controls = &gtk::Scale {
                         set_orientation: gtk::Orientation::Horizontal,
-                        set_range: args!(-100.0, 100.0),
+                        set_range: args!(-10.0, 10.0),
                         set_increments: args!(1.0, 1.0),
                         set_slider_size_fixed: true,
                         set_size_request: args!(100, -1),
@@ -430,7 +436,6 @@ impl Widgets<AppModel, ()> for AppWidgets {
                     },
                 },
 
-                //TODO: add reset button
                 append = &gtk::Label {
                     set_margin_all: 5,
                     set_label: watch! {
@@ -441,6 +446,12 @@ impl Widgets<AppModel, ()> for AppWidgets {
                             model.camera.vrp().z,
                         )
                     }
+                },
+                append = &gtk::Button {
+                    set_label: "Reset Camera",
+                    connect_clicked(sender) => move |_| {
+                        send!(sender, AppMsg::ResetCamera);
+                    },
                 },
                 append = &gtk::Separator::new(gtk::Orientation::Horizontal) {},
             }

@@ -27,6 +27,8 @@ pub type Vector3D = Vector<f64>;
 /// Represents the colour of a light source/ray.
 /// Range from 0.0 to 1.0
 pub type LightColour = Vector<f64>;
+/// 3D Matrix for rotation transformations
+pub type Matrix3x3<T> = [Vector<T>; 3];
 
 #[derive(Clone, Copy, Debug)]
 pub enum ColourChannel {
@@ -158,6 +160,18 @@ impl Vector<f64> {
             if self.y != 0.0 { 1.0 / self.y } else { 0.0 },
             if self.z != 0.0 { 1.0 / self.z } else { 0.0 },
         )
+    }
+}
+
+impl <T: VectorNum> std::ops::Mul<Vector<T>> for Matrix3x3<T> {
+    type Output = Vector<T>;
+
+    fn mul(self, rhs: Vector<T>) -> Self::Output {
+        let x = self[0].x * rhs.x + self[1].x * rhs.y + self[2].x * rhs.z;
+        let y = self[0].y * rhs.x + self[1].y * rhs.y + self[2].y * rhs.z;
+        let z = self[0].z * rhs.x + self[1].z * rhs.y + self[2].z * rhs.z;
+
+        Vector::new(x, y, z)
     }
 }
 
@@ -328,5 +342,18 @@ mod tests {
         let v1 = Vector::new(1.0, 2.0, 3.0);
         let v2 = Vector::new(1.0, 5.0, 7.0);
         assert_eq!(v1.dot(&v2), 32.0);
+    }
+
+    #[test]
+    fn matrix_multiplication() {
+        let matrix = [
+            Vector::new(1.0, 0.0, 2.0),
+            Vector::new(2.0, 1.0, 3.0),
+            Vector::new(1.0, 0.0, 4.0)
+        ];
+
+        let v = Vector::new(3.0, 6.0, 1.0);
+
+        assert_eq!(matrix * v, Vector::new(16.0, 6.0, 28.0));
     }
 }
