@@ -60,11 +60,10 @@ pub struct CameraProps {
     pub pixel_size: f64,
 }
 
-// TODO: figure out how to move along x/y/z axes relative to the current
-//       VPN by adjusting VRP accordingly
-//       e.g. when moving camera up, we don't want to go straight up the
-//            y-axis, instead we want to move up in a way that we're rotating
-//            around the view_reference_point (0, 0, 0)
+//TODO: - store the x/y transform matrices
+//      - apply them to original vrp when calling .vrp(), but don't actually
+//        mutate vrp field (might have to combine them into one composite rotation
+//        matrix or whatever)
 impl Camera {
     /// Create a new `Camera` facing the origin (0, 0, 0)
     pub fn new(params: CameraParams) -> Self {
