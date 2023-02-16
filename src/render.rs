@@ -1,5 +1,5 @@
 use crate::shapes::Shape;
-use crate::{Camera, Intersection, PixelColour, Ray, Sphere};
+use crate::{Camera, Intersection, Matrix3x3, PixelColour, Ray, Sphere};
 use image::{ImageFormat, RgbaImage};
 use rayon::prelude::*;
 use std::cmp::Ordering;
@@ -9,12 +9,19 @@ const BACKGROUND: PixelColour = PixelColour { x: 0, y: 0, z: 0 };
 
 //TODO: use a [[u8; IMG_WIDTH * 4]; IMG_HEIGHT] instead (or IMG_WIDTH * 3 if i remove alpha)
 pub fn render(img: &mut RgbaImage, camera: &Camera, shapes: &Vec<Sphere>) {
+    let rotation_matrix = camera.general_rotation_matrix();
     img.enumerate_rows_mut()
         .par_bridge()
         .into_par_iter()
         .for_each(|(j, row)| {
             row.enumerate().for_each(|(i, px)| {
-                let new_colour = calculate_pixel_colour(i, j, camera, &shapes);
+                let new_colour = calculate_pixel_colour(
+                    i,
+                    j,
+                    camera,
+                    &shapes,
+                    &rotation_matrix,
+                );
                 let new_colour =
                     [new_colour.x, new_colour.y, new_colour.z, 255];
                 if new_colour != px.2 .0 {
@@ -34,8 +41,10 @@ fn calculate_pixel_colour(
     j: u32,
     camera: &Camera,
     shapes: &Vec<Sphere>,
+    rotation_matrix: &Matrix3x3<f64>,
 ) -> PixelColour {
-    let (origin, direction) = camera.screen[j as usize][i];
+    let (origin, direction) =
+        camera.pixel_props(i, j as usize, rotation_matrix);
     let ray = Ray { origin, direction };
     let intersections = shapes
         .iter()

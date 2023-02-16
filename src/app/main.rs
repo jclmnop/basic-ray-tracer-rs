@@ -55,7 +55,7 @@ pub fn main() {
 
 fn setup_logging() {
     let mut log_builder = Builder::new();
-    log_builder.filter_level(log::LevelFilter::Warn);
+    log_builder.filter_level(log::LevelFilter::Info);
     log_builder.parse_env("LOG");
     log_builder.init();
 }

@@ -113,7 +113,7 @@ impl Camera {
     }
 
     pub fn vrp(&self) -> Point {
-        self.composite_rotation_matrix() * self.view_reference_point
+        self.general_rotation_matrix() * self.view_reference_point
     }
 
     pub fn vpn(&self) -> Vector3D {
@@ -180,6 +180,16 @@ impl Camera {
         self.v_rotation
     }
 
+    pub fn pixel_props(
+        &self,
+        i: usize,
+        j: usize,
+        rotation_matrix: &Matrix3x3<f64>,
+    ) -> (Point, Vector3D) {
+        let (origin, direction) = self.screen[j as usize][i];
+        (rotation_matrix * origin, rotation_matrix * direction)
+    }
+
     pub fn camera_props(&self) -> CameraProps {
         let distance_from_projection_point =
             self.view_plane_normal * self.focal_length;
@@ -205,7 +215,7 @@ impl Camera {
         }
     }
 
-    fn composite_rotation_matrix(&self) -> Matrix3x3<f64> {
+    pub fn general_rotation_matrix(&self) -> Matrix3x3<f64> {
         matrix_mul(
             self.horizontal_rotation_matrix(),
             self.vertical_rotation_matrix(),
@@ -224,7 +234,7 @@ impl Camera {
         self.view_up_vector = self.view_right_vector * self.view_plane_normal;
         self.view_up_vector.normalise();
 
-        self.setup_screen();
+        // self.setup_screen();
     }
 
     fn new_screen(&mut self) {

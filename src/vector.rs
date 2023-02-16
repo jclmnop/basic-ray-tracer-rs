@@ -175,7 +175,17 @@ impl<T: VectorNum> std::ops::Mul<Vector<T>> for Matrix3x3<T> {
     }
 }
 
-//TODO: Matrix x Matrix multiplication
+impl<T: VectorNum> std::ops::Mul<Vector<T>> for &Matrix3x3<T> {
+    type Output = Vector<T>;
+
+    fn mul(self, rhs: Vector<T>) -> Self::Output {
+        let x = self[0].x * rhs.x + self[1].x * rhs.y + self[2].x * rhs.z;
+        let y = self[0].y * rhs.x + self[1].y * rhs.y + self[2].y * rhs.z;
+        let z = self[0].z * rhs.x + self[1].z * rhs.y + self[2].z * rhs.z;
+
+        Vector::new(x, y, z)
+    }
+}
 
 pub fn matrix_mul<T: VectorNum>(
     left: Matrix3x3<T>,
