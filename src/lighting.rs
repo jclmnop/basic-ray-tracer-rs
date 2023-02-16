@@ -1,4 +1,3 @@
-#![allow(dead_code, unused_variables)]
 use crate::shapes::Shape;
 use crate::{ColourChannel, LightColour, PixelColour, Point, Vector3D};
 
@@ -78,11 +77,11 @@ impl<'a> Intersection<'a> {
         self.light_source
     }
 
-    pub fn phong(&self, pixel_point: &Point) -> PixelColour {
-        self.phong_diffuse(pixel_point) + self.phong_ambient(pixel_point)
+    pub fn phong(&self, _pixel_point: &Point) -> PixelColour {
+        self.phong_diffuse() + self.phong_ambient()
     }
 
-    fn phong_ambient(&self, pixel_point: &Point) -> PixelColour {
+    fn phong_ambient(&self) -> PixelColour {
         if self.is_inside {
             PixelColour::new(
                 self.phong_ambient_colour_channel(ColourChannel::Red),
@@ -104,7 +103,7 @@ impl<'a> Intersection<'a> {
         (colour_k * colour_l * 255.0) as u8
     }
 
-    fn phong_diffuse(&self, pixel_point: &Point) -> PixelColour {
+    fn phong_diffuse(&self) -> PixelColour {
         let mut direction_l = self.light_source.position - self.point;
         direction_l.normalise();
         let direction_n = self.object.surface_normal(&self.point);

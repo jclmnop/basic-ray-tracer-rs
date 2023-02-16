@@ -1,6 +1,6 @@
 use crate::{ColourChannel, LightColour, PixelColour};
 
-// TODO: specular lighting (i think it's optional but fuck it)
+// TODO: specular lighting (optional)
 
 // Colours
 pub const ZIMA_BLUE: PixelColour = PixelColour {
@@ -41,12 +41,12 @@ impl Material {
             colour,
         }
     }
-    
+
     pub fn default_with_colour(colour: PixelColour) -> Self {
         let mut material = Self::default();
         material.colour = colour.to_light_colour();
         material
-    } 
+    }
 
     pub fn ambient_k(&self) -> LightColour {
         self.colour * self.ambient_coefficient
@@ -77,13 +77,13 @@ impl Material {
         match channel {
             ColourChannel::Red => {
                 self.colour.x = value;
-            },
+            }
             ColourChannel::Green => {
                 self.colour.y = value;
-            },
+            }
             ColourChannel::Blue => {
                 self.colour.z = value;
-            },
+            }
         };
     }
 }

@@ -1,13 +1,17 @@
-use std::path::Path;
-use std::env;
+use env_logger::Builder;
 use gtk::gdk_pixbuf::{Colorspace, Pixbuf};
 use gtk::prelude::*;
-use gtk::{Image, Orientation};
 use image::{EncodableLayout, RgbaImage};
-use ray_tracing::{render, Camera, CameraParams, Sphere, IMG_HEIGHT, IMG_SIZE, IMG_WIDTH, Point, ColourChannel, ZIMA_BLUE, BURNT_ORANGE, timeit};
-use relm4::{send, AppUpdate, Model, RelmApp, Sender, WidgetPlus, Widgets, set_global_css_from_file};
+use ray_tracing::{
+    render, timeit, Camera, ColourChannel, Point, Sphere, BURNT_ORANGE,
+    IMG_HEIGHT, IMG_SIZE, IMG_WIDTH, ZIMA_BLUE,
+};
+use relm4::{
+    send, set_global_css_from_file, AppUpdate, Model, RelmApp, Sender,
+    WidgetPlus, Widgets,
+};
+use std::path::Path;
 use tracker::track;
-use env_logger::Builder;
 
 const RENDER_WARN_MS: u128 = 40;
 const CAMERA_WARN_MS: u128 = 5;
@@ -19,8 +23,16 @@ pub fn main() {
             Sphere::default(),
             Sphere::default_with_pos(Point::new(100.0, 100.0, 200.0)),
             Sphere::default_with_pos(Point::new(200.0, 200.0, 400.0)),
-            Sphere::new_with_colour(Point::new(-150.0, -50.0, 200.0), 50.0, ZIMA_BLUE),
-            Sphere::new_with_colour(Point::new(34.0, 100.0, -150.0), 50.0, BURNT_ORANGE),
+            Sphere::new_with_colour(
+                Point::new(-150.0, -50.0, 200.0),
+                50.0,
+                ZIMA_BLUE,
+            ),
+            Sphere::new_with_colour(
+                Point::new(34.0, 100.0, -150.0),
+                50.0,
+                BURNT_ORANGE,
+            ),
         ],
         camera: Camera::default(),
         canvas: RgbaImage::new(IMG_WIDTH, IMG_HEIGHT),
@@ -56,14 +68,21 @@ enum AppMsg {
     SelectSphere(usize),
     MoveX(f64),
     MoveY(f64),
-    ResetCamera,
+    ResetCamera(RotationAxis),
+}
+
+#[derive(Debug)]
+enum RotationAxis {
+    Horizontal,
+    Vertical,
+    Both,
 }
 
 #[derive(Debug)]
 enum Axis {
     X,
     Y,
-    Z
+    Z,
 }
 
 #[track]
@@ -98,7 +117,8 @@ impl AppModel {
                 IMG_SIZE as i32,
                 (IMG_SIZE * 4) as i32,
             );
-        }).as_millis();
+        })
+        .as_millis();
         if render_time > RENDER_WARN_MS {
             log::warn!("Render time: {render_time}ms");
         } else {
@@ -119,9 +139,9 @@ impl AppUpdate for AppModel {
             AppMsg::ChangePosition(axis, v) => {
                 let i = self.current_index;
                 match axis {
-                    Axis::X => {self.shapes[i].set_x(v)}
-                    Axis::Y => {self.shapes[i].set_y(v)}
-                    Axis::Z => {self.shapes[i].set_z(v)}
+                    Axis::X => self.shapes[i].set_x(v),
+                    Axis::Y => self.shapes[i].set_y(v),
+                    Axis::Z => self.shapes[i].set_z(v),
                 }
                 self.render();
             }
@@ -141,8 +161,11 @@ impl AppUpdate for AppModel {
                 self.set_current_index(index);
             }
             AppMsg::MoveX(x) => {
-                println!("MoveX: {x}");
-                let camera_setup_time = timeit!({self.camera.move_x(x);}).as_millis();
+                // println!("MoveX: {x}");
+                let camera_setup_time = timeit!({
+                    self.camera.move_x(x);
+                })
+                .as_millis();
                 if camera_setup_time > CAMERA_WARN_MS {
                     log::warn!("Camera Setup Time: {camera_setup_time}ms");
                 } else {
@@ -151,8 +174,11 @@ impl AppUpdate for AppModel {
                 self.render();
             }
             AppMsg::MoveY(y) => {
-                println!("MoveY: {y}");
-                let camera_setup_time = timeit!({self.camera.move_y(y);}).as_millis();
+                // println!("MoveY: {y}");
+                let camera_setup_time = timeit!({
+                    self.camera.move_y(y);
+                })
+                .as_millis();
                 if camera_setup_time > CAMERA_WARN_MS {
                     log::warn!("Camera Setup Time: {camera_setup_time}ms");
                 } else {
@@ -160,8 +186,18 @@ impl AppUpdate for AppModel {
                 }
                 self.render();
             }
-            AppMsg::ResetCamera => {
-                self.camera.reset_vrp();
+            AppMsg::ResetCamera(axis) => {
+                match axis {
+                    RotationAxis::Horizontal => {
+                        self.camera.reset_x();
+                    }
+                    RotationAxis::Vertical => {
+                        self.camera.reset_y();
+                    }
+                    RotationAxis::Both => {
+                        self.camera.reset_vrp();
+                    }
+                }
                 self.render();
             }
         }
@@ -444,15 +480,31 @@ impl Widgets<AppModel, ()> for AppWidgets {
                             model.camera.vrp().x,
                             model.camera.vrp().y,
                             model.camera.vrp().z,
-                            model.camera.h_rotation,
-                            model.camera.v_rotation,
+                            model.camera.h_rotation(),
+                            model.camera.v_rotation(),
                         )
                     }
                 },
-                append = &gtk::Button {
-                    set_label: "Reset Camera",
-                    connect_clicked(sender) => move |_| {
-                        send!(sender, AppMsg::ResetCamera);
+                append: reset_buttons = &gtk::Box {
+                    set_halign: gtk::Align::Center,
+                    set_orientation: gtk::Orientation::Horizontal,
+                    append = &gtk::Button {
+                        set_label: "Reset Vertical",
+                        connect_clicked(sender) => move |_| {
+                            send!(sender, AppMsg::ResetCamera(RotationAxis::Vertical));
+                        },
+                    },
+                    append = &gtk::Button {
+                        set_label: "Reset Horizontal",
+                        connect_clicked(sender) => move |_| {
+                            send!(sender, AppMsg::ResetCamera(RotationAxis::Horizontal));
+                        },
+                    },
+                    append = &gtk::Button {
+                        set_label: "Reset Both",
+                        connect_clicked(sender) => move |_| {
+                            send!(sender, AppMsg::ResetCamera(RotationAxis::Both));
+                        },
                     },
                 },
                 append = &gtk::Separator::new(gtk::Orientation::Horizontal) {},

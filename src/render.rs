@@ -13,16 +13,14 @@ pub fn render(img: &mut RgbaImage, camera: &Camera, shapes: &Vec<Sphere>) {
         .par_bridge()
         .into_par_iter()
         .for_each(|(j, row)| {
-            row.enumerate()
-                .for_each(|(i, px)| {
-                    let new_colour =
-                        calculate_pixel_colour(i, j, camera, &shapes);
-                    let new_colour =
-                        [new_colour.x, new_colour.y, new_colour.z, 255];
-                    if new_colour != px.2 .0 {
-                        px.2 .0 = new_colour;
-                    }
-                });
+            row.enumerate().for_each(|(i, px)| {
+                let new_colour = calculate_pixel_colour(i, j, camera, &shapes);
+                let new_colour =
+                    [new_colour.x, new_colour.y, new_colour.z, 255];
+                if new_colour != px.2 .0 {
+                    px.2 .0 = new_colour;
+                }
+            });
         })
 }
 

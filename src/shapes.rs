@@ -1,9 +1,8 @@
-#![allow(dead_code, unused_variables)]
-use crate::{Camera, ColourChannel, Intersection, Material, PixelColour, Point, Ray, Vector3D};
-use std::cmp::{min, Ordering};
-
-// #[derive(Copy, Clone)]
-// pub struct Intersection(pub Point, pub PixelColour);
+use crate::{
+    Camera, ColourChannel, Intersection, Material, PixelColour, Point, Ray,
+    Vector3D,
+};
+use std::cmp::Ordering;
 
 pub trait Shape: Sync {
     /// Calculate where the closes intersection between a ray and the surface of a
@@ -36,13 +35,13 @@ impl Sphere {
             material,
         }
     }
-    
+
     pub fn new_with_colour(c: Point, r: f64, colour: PixelColour) -> Self {
         let material = Material::default_with_colour(colour);
         Sphere {
             center: c,
             radius: r,
-            material
+            material,
         }
     }
 
@@ -108,7 +107,7 @@ impl Shape for Sphere {
                 self,
                 ray,
                 camera.light_source(),
-                is_inside
+                is_inside,
             ))
         } else {
             None

@@ -1,6 +1,14 @@
-#![allow(dead_code, unused_variables)]
-use crate::{LightSource, Point, Vector3D, IMG_HEIGHT, IMG_SIZE, IMG_WIDTH, Matrix3x3, Vector, matrix_mul};
+use crate::{
+    matrix_mul, LightSource, Matrix3x3, Point, Vector, Vector3D, IMG_HEIGHT,
+    IMG_SIZE, IMG_WIDTH,
+};
 use rayon::prelude::*;
+
+const APPROX_VUV: Vector3D = Vector {
+    x: 0.0,
+    y: 1.0,
+    z: 0.0,
+};
 
 pub struct Camera {
     look_at: Point,
@@ -15,8 +23,8 @@ pub struct Camera {
     scale: f64,
     light_source: LightSource,
     fov: f64,
-    pub h_rotation: f64,
-    pub v_rotation: f64,
+    h_rotation: f64,
+    v_rotation: f64,
 }
 
 pub struct CameraParams {
@@ -33,8 +41,12 @@ pub struct CameraParams {
 impl Default for CameraParams {
     fn default() -> Self {
         Self {
-            view_reference_point: Point::new(0.0, 0.0, -(IMG_SIZE as f64) * 1.0),
-            approx_view_up_vector: Vector3D::new(0.0, 1.0, 0.0),
+            view_reference_point: Point::new(
+                0.0,
+                0.0,
+                -(IMG_SIZE as f64) * 1.0,
+            ),
+            approx_view_up_vector: APPROX_VUV,
             focal_length: 100.0,
             img_height: IMG_HEIGHT as usize,
             img_width: IMG_WIDTH as usize,
@@ -125,8 +137,19 @@ impl Camera {
     }
 
     pub fn reset_vrp(&mut self) {
-        self.view_up_vector = Vector::new(0.0, 1.0, 0.0);
+        self.view_up_vector = APPROX_VUV;
         self.h_rotation = 0.0;
+        self.v_rotation = 0.0;
+        self.adjust_view();
+    }
+
+    pub fn reset_x(&mut self) {
+        self.h_rotation = 0.0;
+        self.adjust_view();
+    }
+
+    pub fn reset_y(&mut self) {
+        self.view_up_vector = APPROX_VUV;
         self.v_rotation = 0.0;
         self.adjust_view();
     }
@@ -134,8 +157,6 @@ impl Camera {
     //TODO: Rotation matrices
     /// Move camera along the x-axis
     pub fn move_x(&mut self, degrees: f64) {
-        // let rotation_matrix = self.horizontal_rotation_matrix(degrees);
-        // self.view_reference_point = rotation_matrix * self.view_reference_point;
         self.h_rotation += degrees;
         if self.h_rotation > 360.0 {
             self.h_rotation -= 360.0;
@@ -147,8 +168,6 @@ impl Camera {
 
     /// Move camera along the y-axis
     pub fn move_y(&mut self, degrees: f64) {
-        // let rotation_matrix = self.vertical_rotation_matrix(degrees);
-        // self.view_reference_point = rotation_matrix * self.view_reference_point;
         self.v_rotation += degrees;
         if self.v_rotation > 90.0 {
             self.v_rotation = 90.0;
@@ -158,11 +177,18 @@ impl Camera {
         self.adjust_view();
     }
 
+    pub fn h_rotation(&self) -> f64 {
+        self.h_rotation
+    }
+
+    pub fn v_rotation(&self) -> f64 {
+        self.v_rotation
+    }
+
     pub fn camera_props(&self) -> CameraProps {
         let distance_from_projection_point =
             self.view_plane_normal * self.focal_length;
-        let screen_center_point =
-            self.vrp() + distance_from_projection_point;
+        let screen_center_point = self.vrp() + distance_from_projection_point;
 
         let (half_width, half_height) = self.half_view();
 
@@ -180,7 +206,7 @@ impl Camera {
             fov: self.fov,
             half_width,
             half_height,
-            pixel_size
+            pixel_size,
         }
     }
 
@@ -192,12 +218,12 @@ impl Camera {
     }
 
     fn adjust_view(&mut self) {
-        let look_at = Point::new(0.0, 0.0, 0.0);
-        let approx_view_up = self.view_up_vector;//Vector3D::new(0.0, 1.0, 0.0);
+        let look_at = self.look_at;
+        let approx_view_up = self.view_up_vector; //Vector3D::new(0.0, 1.0, 0.0);
         self.view_plane_normal = look_at - self.vrp();
         self.view_plane_normal.normalise();
 
-        self.view_right_vector = self.view_plane_normal * approx_view_up;//self.view_up_vector;
+        self.view_right_vector = self.view_plane_normal * approx_view_up; //self.view_up_vector;
         self.view_right_vector.normalise();
 
         self.view_up_vector = self.view_right_vector * self.view_plane_normal;
@@ -279,9 +305,8 @@ impl Camera {
 
         // TODO: I had to invert both of these so that +x is to the right, and
         //       +y is up, what am I doing wrong?
-        let u = ((width - i) - width / 2.0) * camera_props.scale * pixel_size;
-        let v = ((height - j) - height / 2.0) * camera_props.scale * pixel_size;
-
+        let u = ((width - i) - width / 2.0) * scale * pixel_size;
+        let v = ((height - j) - height / 2.0) * scale * pixel_size;
 
         camera_props.screen_center_point
             + (camera_props.vrv * u)
@@ -302,7 +327,7 @@ impl Camera {
         [
             Vector::new(1.0, 0.0, 0.0),
             Vector::new(0.0, degrees.cos(), degrees.sin()),
-            Vector::new(0.0, -degrees.sin(), degrees.cos())
+            Vector::new(0.0, -degrees.sin(), degrees.cos()),
         ]
     }
 
@@ -311,11 +336,9 @@ impl Camera {
         [
             Vector::new(degrees.cos(), 0.0, -degrees.sin()),
             Vector::new(0.0, 1.0, 0.0),
-            Vector::new(degrees.sin(), 0.0, degrees.cos())
+            Vector::new(degrees.sin(), 0.0, degrees.cos()),
         ]
     }
-
-
 }
 
 impl Default for Camera {

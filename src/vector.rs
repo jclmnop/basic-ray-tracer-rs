@@ -1,6 +1,6 @@
+use gtk::gdk::RGBA;
 use num::{Bounded, Num, NumCast, ToPrimitive};
 use std::fmt::{Display, Formatter};
-use gtk::gdk::RGBA;
 
 pub trait VectorNum:
     Copy
@@ -132,7 +132,7 @@ impl From<RGBA> for Vector<u8> {
         Self::new(
             (value.red() * 255.0) as u8,
             (value.green() * 255.0) as u8,
-            (value.blue() * 255.0) as u8
+            (value.blue() * 255.0) as u8,
         )
     }
 }
@@ -163,7 +163,7 @@ impl Vector<f64> {
     }
 }
 
-impl <T: VectorNum> std::ops::Mul<Vector<T>> for Matrix3x3<T> {
+impl<T: VectorNum> std::ops::Mul<Vector<T>> for Matrix3x3<T> {
     type Output = Vector<T>;
 
     fn mul(self, rhs: Vector<T>) -> Self::Output {
@@ -177,7 +177,10 @@ impl <T: VectorNum> std::ops::Mul<Vector<T>> for Matrix3x3<T> {
 
 //TODO: Matrix x Matrix multiplication
 
-pub fn matrix_mul<T:VectorNum>(left: Matrix3x3<T>, right: Matrix3x3<T>) -> Matrix3x3<T> {
+pub fn matrix_mul<T: VectorNum>(
+    left: Matrix3x3<T>,
+    right: Matrix3x3<T>,
+) -> Matrix3x3<T> {
     let x = left * right[0];
     let y = left * right[1];
     let z = left * right[2];
@@ -367,7 +370,7 @@ mod tests {
         let matrix = [
             Vector::new(1.0, 0.0, 2.0),
             Vector::new(2.0, 1.0, 3.0),
-            Vector::new(1.0, 0.0, 4.0)
+            Vector::new(1.0, 0.0, 4.0),
         ];
 
         let v = Vector::new(3.0, 6.0, 1.0);
