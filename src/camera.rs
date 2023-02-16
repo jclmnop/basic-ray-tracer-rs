@@ -17,7 +17,7 @@ pub struct Camera {
     view_up_vector: Vector3D,
     view_right_vector: Vector3D,
     focal_length: f64,
-    pub screen: Vec<Vec<(Point, Vector3D)>>,
+    screen: Vec<Vec<(Point, Vector3D)>>,
     img_height: usize,
     img_width: usize,
     scale: f64,
