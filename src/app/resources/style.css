@@ -1,5 +1,25 @@
 /* TODO: figure out how CSS works for GTK4 */
-window.background.csd {
+window.background {
   background-color: black;
+  color: lightgray;
+  font-family: "Roboto Mono", ui-monospace;
+}
+
+button {
   color: white;
+  background: black;
+}
+
+button:hover {
+  background: #292929;
+  /*outline: 1px solid #fff;*/
+  /*outline-offset: -2px;*/
+}
+
+button:active {
+  /*color: black;*/
+  /*background: darkgray;*/
+  outline: 1px solid #fff;
+  outline-offset: -2px;
+  transform: scale(0.98);
 }

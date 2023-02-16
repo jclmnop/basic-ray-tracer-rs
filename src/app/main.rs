@@ -12,8 +12,9 @@ use relm4::{
 use std::path::Path;
 use tracker::track;
 
+// Render time higher than 40ms means a framerate less than 25fps
 const RENDER_WARN_MS: u128 = 40;
-const CAMERA_WARN_MS: u128 = 5;
+const CAMERA_WARN_MS: u128 = 1;
 
 pub fn main() {
     setup_logging();
@@ -353,6 +354,12 @@ impl Widgets<AppModel, ()> for AppWidgets {
                     append: x_box = &gtk::Box {
                         set_orientation: gtk::Orientation::Vertical,
                         set_halign: gtk::Align::Fill,
+
+                        append: x_label = &gtk::Label {
+                            set_halign: gtk::Align::Center,
+                            set_label: "X"
+                        },
+
                         append: x_pos = &gtk::Scale {
                             set_halign: gtk::Align::Fill,
                             set_orientation: gtk::Orientation::Horizontal,
@@ -369,14 +376,14 @@ impl Widgets<AppModel, ()> for AppWidgets {
                                 send!(sender, AppMsg::ChangePosition(Axis::X, v));
                             }
                         },
-
-                        append: x_label = &gtk::Label {
-                            set_halign: gtk::Align::Center,
-                            set_label: "x"
-                        },
                     },
                     append: y_box = &gtk::Box {
                         set_orientation: gtk::Orientation::Vertical,
+
+                        append: y_label = &gtk::Label {
+                            set_halign: gtk::Align::Center,
+                            set_label: "Y"
+                        },
                         append: y_pos = &gtk::Scale {
                             set_orientation: gtk::Orientation::Horizontal,
                             set_draw_value: true,
@@ -392,15 +399,14 @@ impl Widgets<AppModel, ()> for AppWidgets {
                                 send!(sender, AppMsg::ChangePosition(Axis::Y, v));
                             }
                         },
-
-                        append: y_label = &gtk::Label {
-                            set_halign: gtk::Align::Center,
-                            set_label: "y"
-                        },
                     },
                     append: z_box = &gtk::Box {
                         set_orientation: gtk::Orientation::Vertical,
 
+                        append: z_label = &gtk::Label {
+                            set_halign: gtk::Align::Center,
+                            set_label: "Z"
+                        },
                         append: z_pos = &gtk::Scale {
                             set_orientation: gtk::Orientation::Horizontal,
                             set_draw_value: true,
@@ -415,11 +421,6 @@ impl Widgets<AppModel, ()> for AppWidgets {
                                 let v = s.value();
                                 send!(sender, AppMsg::ChangePosition(Axis::Z, v));
                             }
-                        },
-
-                        append: z_label = &gtk::Label {
-                            set_halign: gtk::Align::Center,
-                            set_label: "z"
                         },
                     },
                 },
