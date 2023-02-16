@@ -75,10 +75,6 @@ pub struct CameraProps {
     pub pixel_size: f64,
 }
 
-//TODO: - store the x/y transform matrices
-//      - apply them to original vrp when calling .vrp(), but don't actually
-//        mutate vrp field (might have to combine them into one composite rotation
-//        matrix or whatever)
 impl Camera {
     /// Create a new `Camera` facing the origin (0, 0, 0)
     pub fn new(params: CameraParams) -> Self {
@@ -154,7 +150,6 @@ impl Camera {
         self.adjust_view();
     }
 
-    //TODO: Rotation matrices
     /// Move camera along the x-axis
     pub fn move_x(&mut self, degrees: f64) {
         self.h_rotation += degrees;
@@ -243,6 +238,9 @@ impl Camera {
     }
 
     // TODO: replace with matrix transformations?
+    //       - build the screen once with the initial coordinates/directions etc
+    //       - use rotation matrix to get the coordinates of each pixel
+    //       - would the same thing work on their direction also?
     fn setup_screen(&mut self) {
         // This is just a way to get around the issue of passing an immutable
         // reference to self into methods during par_iter_mut()
