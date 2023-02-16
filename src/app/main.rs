@@ -1,10 +1,9 @@
 use env_logger::Builder;
 use gtk::gdk_pixbuf::{Colorspace, Pixbuf};
 use gtk::prelude::*;
-use image::{EncodableLayout, RgbaImage};
 use ray_tracing::{
-    render, timeit, Camera, ColourChannel, Point, Sphere, BURNT_ORANGE,
-    IMG_HEIGHT, IMG_SIZE, IMG_WIDTH, ZIMA_BLUE,
+    render, timeit, Camera, ColourChannel, Point, Sphere,
+    BURNT_ORANGE, IMG_SIZE, ZIMA_BLUE,
 };
 use relm4::{
     send, set_global_css_from_file, AppUpdate, Model, RelmApp, Sender,
@@ -35,7 +34,6 @@ pub fn main() {
             ),
         ],
         camera: Camera::default(),
-        canvas: RgbaImage::new(IMG_WIDTH, IMG_HEIGHT),
         image: Pixbuf::new(
             Colorspace::Rgb,
             true,
@@ -49,13 +47,13 @@ pub fn main() {
     };
     model.render();
     let app = RelmApp::new(model);
-    set_global_css_from_file(Path::new("./src/aoo/resources/style.css"));
+    set_global_css_from_file(Path::new("./src/app/resources/style.css"));
     app.run();
 }
 
 fn setup_logging() {
     let mut log_builder = Builder::new();
-    log_builder.filter_level(log::LevelFilter::Info);
+    log_builder.filter_level(log::LevelFilter::Warn);
     log_builder.parse_env("LOG");
     log_builder.init();
 }
@@ -92,8 +90,6 @@ struct AppModel {
     #[tracker::do_not_track]
     camera: Camera,
     #[tracker::do_not_track]
-    canvas: RgbaImage,
-    #[tracker::do_not_track]
     image: Pixbuf,
     current_index: usize,
 }
@@ -107,16 +103,7 @@ impl Model for AppModel {
 impl AppModel {
     pub fn render(&mut self) {
         let render_time = timeit!({
-            render(&mut self.canvas, &self.camera, &self.shapes);
-            self.image = Pixbuf::from_bytes(
-                &self.canvas.as_bytes().into(),
-                Colorspace::Rgb,
-                true,
-                8,
-                IMG_SIZE as i32,
-                IMG_SIZE as i32,
-                (IMG_SIZE * 4) as i32,
-            );
+            render(&mut self.image, &self.camera, &self.shapes);
         })
         .as_millis();
         if render_time > RENDER_WARN_MS {

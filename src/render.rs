@@ -1,5 +1,9 @@
 use crate::shapes::Shape;
-use crate::{Camera, Intersection, Matrix3x3, PixelColour, Ray, Sphere};
+use crate::{
+    Camera, Intersection, Matrix3x3, PixelColour, Ray, Sphere,
+    ARRAY_WIDTH, BYTES_PER_PIXEL,
+};
+use gtk::gdk_pixbuf::Pixbuf;
 use image::{ImageFormat, RgbaImage};
 use rayon::prelude::*;
 use std::cmp::Ordering;
@@ -7,28 +11,36 @@ use std::path::Path;
 
 const BACKGROUND: PixelColour = PixelColour { x: 0, y: 0, z: 0 };
 
-//TODO: use a [[u8; IMG_WIDTH * 4]; IMG_HEIGHT] instead (or IMG_WIDTH * 3 if i remove alpha)
-pub fn render(img: &mut RgbaImage, camera: &Camera, shapes: &Vec<Sphere>) {
+pub fn render(img: &mut Pixbuf, camera: &Camera, shapes: &Vec<Sphere>) {
     let rotation_matrix = camera.general_rotation_matrix();
-    img.enumerate_rows_mut()
-        .par_bridge()
-        .into_par_iter()
-        .for_each(|(j, row)| {
-            row.enumerate().for_each(|(i, px)| {
-                let new_colour = calculate_pixel_colour(
-                    i,
-                    j,
-                    camera,
-                    &shapes,
-                    &rotation_matrix,
+    // Unsafe because of Pixbuf.pixels(), should be fine though because the reason
+    // unsafe is because you can't have any other reads/writes to the pixbuf while
+    // the pixels() reference is still active, and because this is all taking
+    // place inside a function where Pixbuf has been passed as &mut reference,
+    // nothing else can read/write Pixbuf anyway.
+    unsafe {
+        img.pixels()
+            .par_chunks_mut(ARRAY_WIDTH)
+            .enumerate()
+            .for_each(|(j, row)| {
+                row.chunks_mut(BYTES_PER_PIXEL).enumerate().for_each(
+                    |(i, px)| {
+                        let new_colour = calculate_pixel_colour(
+                            i,
+                            j,
+                            camera,
+                            &shapes,
+                            &rotation_matrix,
+                        );
+                        let new_colour =
+                            [new_colour.x, new_colour.y, new_colour.z, 255];
+                        if new_colour != px {
+                            px.copy_from_slice(&new_colour);
+                        }
+                    },
                 );
-                let new_colour =
-                    [new_colour.x, new_colour.y, new_colour.z, 255];
-                if new_colour != px.2 .0 {
-                    px.2 .0 = new_colour;
-                }
-            });
-        })
+            })
+    }
 }
 
 pub fn write_img(img: &RgbaImage, path: &Path) {
@@ -38,13 +50,12 @@ pub fn write_img(img: &RgbaImage, path: &Path) {
 
 fn calculate_pixel_colour(
     i: usize,
-    j: u32,
+    j: usize,
     camera: &Camera,
     shapes: &Vec<Sphere>,
     rotation_matrix: &Matrix3x3<f64>,
 ) -> PixelColour {
-    let (origin, direction) =
-        camera.pixel_props(i, j as usize, rotation_matrix);
+    let (origin, direction) = camera.pixel_props(i, j, rotation_matrix);
     let ray = Ray { origin, direction };
     let intersections = shapes
         .iter()

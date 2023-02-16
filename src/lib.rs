@@ -17,6 +17,8 @@ pub use vector::*;
 pub const IMG_SIZE: u32 = 1000;
 pub const IMG_HEIGHT: u32 = IMG_SIZE;
 pub const IMG_WIDTH: u32 = IMG_SIZE;
+pub const BYTES_PER_PIXEL: usize = 4;
+pub const ARRAY_WIDTH: usize = IMG_WIDTH as usize * BYTES_PER_PIXEL;
 
 // Threads
 pub const NUM_THREADS: usize = 10;
