@@ -63,7 +63,7 @@ fn calculate_pixel_colour(
         .collect::<Vec<_>>();
     let closest_intersect = closest_intersect(intersections);
     if let Some(intersection) = closest_intersect {
-        intersection.phong(&origin)
+        intersection.phong(&origin, camera.ambient_coefficient())
     } else {
         BACKGROUND
     }

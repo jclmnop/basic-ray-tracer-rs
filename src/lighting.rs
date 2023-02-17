@@ -77,28 +77,28 @@ impl<'a> Intersection<'a> {
         self.light_source
     }
 
-    pub fn phong(&self, _pixel_point: &Point) -> PixelColour {
-        self.phong_diffuse() + self.phong_ambient()
+    pub fn phong(&self, _pixel_point: &Point, ambient_coefficient: f64) -> PixelColour {
+        self.phong_diffuse() + self.phong_ambient(ambient_coefficient)
     }
 
-    fn phong_ambient(&self) -> PixelColour {
+    fn phong_ambient(&self, ambient_coefficient: f64) -> PixelColour {
         if self.is_inside {
             PixelColour::new(
-                self.phong_ambient_colour_channel(ColourChannel::Red),
-                self.phong_ambient_colour_channel(ColourChannel::Green),
-                self.phong_ambient_colour_channel(ColourChannel::Blue),
+                self.phong_ambient_colour_channel(ColourChannel::Red, ambient_coefficient),
+                self.phong_ambient_colour_channel(ColourChannel::Green, ambient_coefficient),
+                self.phong_ambient_colour_channel(ColourChannel::Blue, ambient_coefficient),
             ) / 2
         } else {
             PixelColour::new(
-                self.phong_ambient_colour_channel(ColourChannel::Red),
-                self.phong_ambient_colour_channel(ColourChannel::Green),
-                self.phong_ambient_colour_channel(ColourChannel::Blue),
+                self.phong_ambient_colour_channel(ColourChannel::Red, ambient_coefficient),
+                self.phong_ambient_colour_channel(ColourChannel::Green, ambient_coefficient),
+                self.phong_ambient_colour_channel(ColourChannel::Blue, ambient_coefficient),
             )
         }
     }
 
-    fn phong_ambient_colour_channel(&self, channel: ColourChannel) -> u8 {
-        let colour_k = self.object.material().ambient_k().colour(&channel);
+    fn phong_ambient_colour_channel(&self, channel: ColourChannel, ambient_coefficient: f64) -> u8 {
+        let colour_k = self.object.material().ambient_k(ambient_coefficient).colour(&channel);
         let colour_l = self.light_source.colour.colour(&channel);
         (colour_k * colour_l * 255.0) as u8
     }

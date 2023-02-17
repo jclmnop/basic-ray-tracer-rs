@@ -10,6 +10,8 @@ const APPROX_VUV: Vector3D = Vector {
     z: 0.0,
 };
 
+const DEFAULT_AMBIENT_COEFFICIENT: f64 = 0.3;
+
 pub struct Camera {
     look_at: Point,
     view_reference_point: Point,
@@ -18,6 +20,7 @@ pub struct Camera {
     view_right_vector: Vector3D,
     focal_length: f64,
     screen: Vec<Vec<(Point, Vector3D)>>,
+    ambient_coefficient: f64,
     img_height: usize,
     img_width: usize,
     scale: f64,
@@ -36,6 +39,7 @@ pub struct CameraParams {
     pub scale: f64,
     pub light_source: LightSource,
     pub fov: f64,
+    pub ambient_coefficient: f64,
 }
 
 impl Default for CameraParams {
@@ -53,6 +57,7 @@ impl Default for CameraParams {
             scale: 1.0,
             light_source: LightSource::default(),
             fov: 45.0,
+            ambient_coefficient: DEFAULT_AMBIENT_COEFFICIENT,
         }
     }
 }
@@ -104,6 +109,7 @@ impl Camera {
             fov: params.fov,
             h_rotation: 0.0,
             v_rotation: 0.0,
+            ambient_coefficient: params.ambient_coefficient
         };
         camera.new_screen();
         // println!("h: {}, v: {}", camera.h_rotation, camera.v_rotation);
@@ -126,6 +132,22 @@ impl Camera {
 
     pub fn vrv(&self) -> Vector3D {
         self.view_right_vector
+    }
+
+    pub fn ambient_coefficient(&self) -> f64 {
+        self.ambient_coefficient
+    }
+
+    pub fn set_ambient_coefficient(&mut self, new_value: f64) {
+        let new_value = if new_value > 1.0 {
+            1.0
+        } else if new_value < 0.0 {
+            0.0
+        } else {
+            new_value
+        };
+
+        self.ambient_coefficient = new_value;
     }
 
     pub fn light_source(&self) -> LightSource {
@@ -373,6 +395,7 @@ mod tests {
             scale: PIXEL_SCALE,
             light_source: LightSource::default(),
             fov: 45.0,
+            ambient_coefficient: DEFAULT_AMBIENT_COEFFICIENT
         };
         Camera::new(camera_params)
     }

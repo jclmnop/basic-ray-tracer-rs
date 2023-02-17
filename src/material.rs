@@ -22,6 +22,7 @@ pub const BURNT_ORANGE: PixelColour = PixelColour {
 const DEFAULT_AMBIENT_COEFFICIENT: f64 = 0.3;
 const DEFAULT_SPECULAR_COEFFICIENT: f64 = 1.0;
 
+// TODO: move ambient coefficient to camera? or somewhere else
 #[derive(Copy, Clone)]
 pub struct Material {
     ambient_coefficient: f64,
@@ -48,8 +49,8 @@ impl Material {
         material
     }
 
-    pub fn ambient_k(&self) -> LightColour {
-        self.colour * self.ambient_coefficient
+    pub fn ambient_k(&self, ambient_coefficient: f64) -> LightColour {
+        self.colour * ambient_coefficient
     }
 
     pub fn colour(&self) -> LightColour {

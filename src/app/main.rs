@@ -68,6 +68,7 @@ enum AppMsg {
     MoveX(f64),
     MoveY(f64),
     ResetCamera(RotationAxis),
+    SetAmbient(f64),
 }
 
 #[derive(Debug)]
@@ -187,6 +188,10 @@ impl AppUpdate for AppModel {
                     }
                 }
                 self.render();
+            }
+            AppMsg::SetAmbient(v) => {
+                self.camera.set_ambient_coefficient(v);
+                self.render()
             }
         }
         true
@@ -433,7 +438,7 @@ impl Widgets<AppModel, ()> for AppWidgets {
                         set_orientation: gtk::Orientation::Vertical,
                         set_range: args!(-10.0, 10.0),
                         set_increments: args!(1.0, 1.0),
-                        set_slider_size_fixed: true,
+                        // set_slider_size_fixed: true,
                         set_inverted: true,
                         set_size_request: args!(-1, 100),
                         connect_value_changed(sender) => move |s| {
@@ -448,7 +453,7 @@ impl Widgets<AppModel, ()> for AppWidgets {
                         set_orientation: gtk::Orientation::Horizontal,
                         set_range: args!(-10.0, 10.0),
                         set_increments: args!(1.0, 1.0),
-                        set_slider_size_fixed: true,
+                        // set_slider_size_fixed: true,
                         set_size_request: args!(100, -1),
                         connect_value_changed(sender) => move |s| {
                             let v = s.value();
@@ -496,6 +501,25 @@ impl Widgets<AppModel, ()> for AppWidgets {
                     },
                 },
                 append = &gtk::Separator::new(gtk::Orientation::Horizontal) {},
+                append = &gtk::Label {
+                    set_margin_all: 5,
+                    set_halign: gtk::Align::Center,
+                    set_label: "Ambient Light",
+                },
+
+                append = &gtk::Separator::new(gtk::Orientation::Horizontal) {},
+                append: ambient_controls = &gtk::Scale {
+                    set_orientation: gtk::Orientation::Horizontal,
+                    set_range: args!(0.0, 1.0),
+                    set_increments: args!(0.01, 0.01),
+                    // set_slider_size_fixed: true,
+                    set_value: model.camera.ambient_coefficient(),
+                    // set_size_request: args!(100, -1),
+                    connect_value_changed(sender) => move |s| {
+                        let v = s.value();
+                        send!(sender, AppMsg::SetAmbient(v));
+                    },
+                },
             }
         }
     }
