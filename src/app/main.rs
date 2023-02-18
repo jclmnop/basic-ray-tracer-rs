@@ -455,6 +455,7 @@ impl Widgets<AppModel, ()> for AppWidgets {
                         set_increments: args!(1.0, 1.0),
                         // set_slider_size_fixed: true,
                         set_size_request: args!(100, -1),
+                        set_inverted: true,
                         connect_value_changed(sender) => move |s| {
                             let v = s.value();
                             if v != 0.0 {
