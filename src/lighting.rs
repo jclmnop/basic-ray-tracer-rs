@@ -1,6 +1,5 @@
 use crate::shapes::Shape;
 use crate::{ColourChannel, LightColour, PixelColour, Point, Vector3D};
-use num::complex::ComplexFloat;
 
 #[derive(Copy, Clone)]
 pub struct LightSource {
@@ -175,8 +174,6 @@ impl<'a> Intersection<'a> {
     fn phong_diffuse_colour_channel(
         &self,
         channel: ColourChannel,
-        // direction_l: &Vector3D,
-        // direction_n: &Vector3D,
         n_l_dot: f64,
     ) -> u8 {
         let diffuse_k = self.object().material().colour();

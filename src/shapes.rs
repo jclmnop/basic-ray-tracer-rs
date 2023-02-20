@@ -158,15 +158,15 @@ mod tests {
         assert!(solve_t(2.0, 2.0, 2.0).is_none());
     }
 
-    // #[test]
-    // fn solution_is_correct_when_disc_is_positive() {
-    //     assert_eq!(solve_t(-2.0, 2.0, 1.0), Some(1.3660254037844386));
-    // }
-    //
-    // #[test]
-    // fn solution_is_correct_when_disc_is_zero() {
-    //     assert_eq!(solve_t(1.0, 2.0, 1.0), Some(-1.0));
-    // }
+    #[test]
+    fn solution_is_correct_when_disc_is_positive() {
+        assert_eq!(solve_t(-2.0, 2.0, 1.0), Some((1.3660254037844386, true)));
+    }
+
+    #[test]
+    fn solution_is_correct_when_disc_is_zero() {
+        assert_eq!(solve_t(1.0, 2.0, 1.0), Some((-1.0, false)));
+    }
 
     // #[test]
     // fn ray_hits_sphere() {

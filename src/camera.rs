@@ -246,17 +246,15 @@ impl Camera {
 
     fn adjust_view(&mut self) {
         let look_at = self.look_at;
-        let approx_view_up = self.view_up_vector; //Vector3D::new(0.0, 1.0, 0.0);
+        let approx_view_up = self.view_up_vector;
         self.view_plane_normal = look_at - self.vrp();
         self.view_plane_normal.normalise();
 
-        self.view_right_vector = self.view_plane_normal * approx_view_up; //self.view_up_vector;
+        self.view_right_vector = self.view_plane_normal * approx_view_up;
         self.view_right_vector.normalise();
 
         self.view_up_vector = self.view_right_vector * self.view_plane_normal;
         self.view_up_vector.normalise();
-
-        // self.setup_screen();
     }
 
     fn new_screen(&mut self) {
@@ -269,10 +267,6 @@ impl Camera {
         self.setup_screen();
     }
 
-    // TODO: replace with matrix transformations?
-    //       - build the screen once with the initial coordinates/directions etc
-    //       - use rotation matrix to get the coordinates of each pixel
-    //       - would the same thing work on their direction also?
     fn setup_screen(&mut self) {
         // This is just a way to get around the issue of passing an immutable
         // reference to self into methods during par_iter_mut()
@@ -380,7 +374,6 @@ impl Default for Camera {
 #[cfg(test)]
 mod tests {
     use super::*;
-    // use crate::timeit;
     const IMG_HEIGHT: u32 = 1000;
     const IMG_WIDTH: u32 = 1000;
     const PIXEL_SCALE: f64 = 1.0;
@@ -406,67 +399,4 @@ mod tests {
         camera.move_x(10.0);
         assert_eq!(0.0, camera.vrp().y);
     }
-
-    //
-    // #[test]
-    // fn camera_created_with_correct_values() {
-    //     let camera = test_camera();
-    //
-    //     assert_eq!(camera.vrp(), Point::new(0.0, 0.0, -1000.0));
-    //     assert_eq!(camera.look_at, Point::new(0.0, 0.0, 0.0));
-    //     assert_eq!(camera.vpn(), Vector3D::new(0.0, 0.0, 1.0));
-    //     assert_eq!(camera.vrv(), Vector3D::new(-1.0, 0.0, 0.0));
-    //     assert_eq!(camera.vuv(), Vector3D::new(0.0, 1.0, 0.0));
-    //
-    //     let setup_time = timeit!({
-    //         test_camera();
-    //     })
-    //     .as_millis();
-    //     println!("\tCamera setup time: {setup_time}ms");
-    // }
-    //
-    // #[test]
-    // fn correct_pixel_point() {
-    //     let camera = test_camera();
-    //     let distance_from_projection_point =
-    //         camera.view_plane_normal * camera.focal_length;
-    //     let screen_center_point =
-    //         camera.view_reference_point + distance_from_projection_point;
-    //     let i_center = camera.img_width / 2;
-    //     let j_center = camera.img_height / 2;
-    //     let props = CameraProps {
-    //         screen_center_point,
-    //         img_width: camera.img_width,
-    //         img_height: camera.img_height,
-    //         scale: camera.scale,
-    //         vrv: camera.vrv(),
-    //         vuv: camera.vuv(),
-    //         vrp: camera.vrp(),
-    //         focal_length: camera.focal_length,
-    //     };
-    //     let point_center_pixel =
-    //         Camera::calc_pixel_point(i_center, j_center, &props);
-    //     let (i_left, j_left) = (i_center - 300, j_center);
-    //     let point_left_pixel = Camera::calc_pixel_point(i_left, j_left, &props);
-    //
-    //     let (i_down, j_down) = (i_center, j_center + 300);
-    //     let point_down_pixel = Camera::calc_pixel_point(i_down, j_down, &props);
-    //
-    //     let (i_diagonal, j_diagonal) = (i_center - 300, j_center + 300);
-    //     let point_diagonal_pixel =
-    //         Camera::calc_pixel_point(i_diagonal, j_diagonal, &props);
-    //
-    //     println!();
-    //     println!("\tcentre: {}", point_center_pixel);
-    //     println!("\tleft: {point_left_pixel}");
-    //     println!("\tdown: {point_down_pixel}");
-    //     println!("\tdiagonal: {point_diagonal_pixel}");
-    //     println!("\tVRP: {}\n\tVPN: {}", camera.vrp(), camera.vpn());
-    //     println!();
-    //
-    //     assert_eq!(point_center_pixel, screen_center_point);
-    //     assert_eq!(point_left_pixel, Point::new(-300.0, 0.0, 0.0));
-    //     assert_eq!(point_down_pixel, Point::new(0.0, -300.0, 0.0));
-    //     assert_eq!(point_diagonal_pixel, Point::new(-300.0, -300.0, 0.0));
-    // }
 }
