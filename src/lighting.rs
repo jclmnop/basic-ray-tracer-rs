@@ -1,5 +1,6 @@
 use crate::shapes::Shape;
 use crate::{ColourChannel, LightColour, PixelColour, Point, Vector3D};
+use num::complex::ComplexFloat;
 
 #[derive(Copy, Clone)]
 pub struct LightSource {
@@ -77,37 +78,93 @@ impl<'a> Intersection<'a> {
         self.light_source
     }
 
-    pub fn phong(&self, _pixel_point: &Point, ambient_coefficient: f64) -> PixelColour {
-        self.phong_diffuse() + self.phong_ambient(ambient_coefficient)
+    pub fn phong(
+        &self,
+        _pixel_point: &Point,
+        ambient_coefficient: f64,
+    ) -> PixelColour {
+        self.phong_diffuse() + self.phong_ambient(ambient_coefficient) + self.phong_specular()
+    }
+
+    fn light_direction(&self) -> Vector3D {
+        let mut direction_l = self.light_source.position - self.point;
+        direction_l.normalise();
+
+        direction_l
+    }
+
+    fn n_l_dot(&self) -> f64 {
+        self.light_direction().dot(&self.object.surface_normal(&self.point))
+    }
+
+    fn reflected_direction(&self) -> Vector3D {
+        let direction_l = self.light_direction();
+        let direction_n = self.object.surface_normal(&self.point);
+        let n_l_dot = self.n_l_dot();
+        let mut direction_r = (direction_n * 2.0 * n_l_dot) - direction_l;
+        // let mut direction_r = direction_l - (direction_n * 2.0 * n_l_dot);
+        direction_r.normalise();
+
+        direction_r
+    }
+
+    fn pixel_direction(&self) -> Vector3D {
+        let mut direction_p = self.ray.origin - self.point;
+        direction_p.normalise();
+
+        direction_p
     }
 
     fn phong_ambient(&self, ambient_coefficient: f64) -> PixelColour {
         if self.is_inside {
             PixelColour::new(
-                self.phong_ambient_colour_channel(ColourChannel::Red, ambient_coefficient),
-                self.phong_ambient_colour_channel(ColourChannel::Green, ambient_coefficient),
-                self.phong_ambient_colour_channel(ColourChannel::Blue, ambient_coefficient),
+                self.phong_ambient_colour_channel(
+                    ColourChannel::Red,
+                    ambient_coefficient,
+                ),
+                self.phong_ambient_colour_channel(
+                    ColourChannel::Green,
+                    ambient_coefficient,
+                ),
+                self.phong_ambient_colour_channel(
+                    ColourChannel::Blue,
+                    ambient_coefficient,
+                ),
             ) / 2
         } else {
             PixelColour::new(
-                self.phong_ambient_colour_channel(ColourChannel::Red, ambient_coefficient),
-                self.phong_ambient_colour_channel(ColourChannel::Green, ambient_coefficient),
-                self.phong_ambient_colour_channel(ColourChannel::Blue, ambient_coefficient),
+                self.phong_ambient_colour_channel(
+                    ColourChannel::Red,
+                    ambient_coefficient,
+                ),
+                self.phong_ambient_colour_channel(
+                    ColourChannel::Green,
+                    ambient_coefficient,
+                ),
+                self.phong_ambient_colour_channel(
+                    ColourChannel::Blue,
+                    ambient_coefficient,
+                ),
             )
         }
     }
 
-    fn phong_ambient_colour_channel(&self, channel: ColourChannel, ambient_coefficient: f64) -> u8 {
-        let colour_k = self.object.material().ambient_k(ambient_coefficient).colour(&channel);
+    fn phong_ambient_colour_channel(
+        &self,
+        channel: ColourChannel,
+        ambient_coefficient: f64,
+    ) -> u8 {
+        let colour_k = self
+            .object
+            .material()
+            .ambient_k(ambient_coefficient)
+            .colour(&channel);
         let colour_l = self.light_source.colour.colour(&channel);
         (colour_k * colour_l * 255.0) as u8
     }
 
     fn phong_diffuse(&self) -> PixelColour {
-        let mut direction_l = self.light_source.position - self.point;
-        direction_l.normalise();
-        let direction_n = self.object.surface_normal(&self.point);
-        let n_l_dot = direction_l.dot(&direction_n);
+        let n_l_dot = self.n_l_dot();
         PixelColour::new(
             self.phong_diffuse_colour_channel(ColourChannel::Red, n_l_dot),
             self.phong_diffuse_colour_channel(ColourChannel::Green, n_l_dot),
@@ -135,5 +192,57 @@ impl<'a> Intersection<'a> {
         };
 
         (colour_l * colour_k * n_l_dot * 255.0) as u8
+    }
+
+    fn phong_specular(&self) -> PixelColour {
+        if self.n_l_dot() < 0.0 {
+            PixelColour::new(0, 0, 0)
+        } else {
+            let specular_k = self.object().material().specular_k();
+            let direction_r = self.reflected_direction();
+            let direction_p = self.pixel_direction();
+            let alignment = direction_r.dot(&direction_p);
+            let specular_coefficient =
+                self.object().material().specular_coefficient();
+
+            if alignment < 0.0 {
+                PixelColour::new(0, 0, 0)
+            } else {
+                PixelColour::new(
+                    self.phong_specular_colour_channel(
+                        ColourChannel::Red,
+                        &specular_k,
+                        alignment,
+                        specular_coefficient
+                    ),
+                    self.phong_specular_colour_channel(
+                        ColourChannel::Green,
+                        &specular_k,
+                        alignment,
+                        specular_coefficient
+                    ),
+                    self.phong_specular_colour_channel(
+                        ColourChannel::Blue,
+                        &specular_k,
+                        alignment,
+                        specular_coefficient
+                    ),
+                )
+            }
+        }
+    }
+
+    fn phong_specular_colour_channel(
+        &self,
+        channel: ColourChannel,
+        specular_k: &LightColour,
+        alignment: f64,
+        specular_coefficient: f64
+    ) -> u8 {
+        let colour_k = specular_k.colour(&channel);
+        let colour_l = self.light_source.colour.colour(&channel);
+        let alignment_coefficient = alignment.powf(specular_coefficient);
+
+        (colour_k * colour_l * alignment_coefficient * 255.0) as u8
     }
 }

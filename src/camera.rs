@@ -109,7 +109,7 @@ impl Camera {
             fov: params.fov,
             h_rotation: 0.0,
             v_rotation: 0.0,
-            ambient_coefficient: params.ambient_coefficient
+            ambient_coefficient: params.ambient_coefficient,
         };
         camera.new_screen();
         // println!("h: {}, v: {}", camera.h_rotation, camera.v_rotation);
@@ -395,7 +395,7 @@ mod tests {
             scale: PIXEL_SCALE,
             light_source: LightSource::default(),
             fov: 45.0,
-            ambient_coefficient: DEFAULT_AMBIENT_COEFFICIENT
+            ambient_coefficient: DEFAULT_AMBIENT_COEFFICIENT,
         };
         Camera::new(camera_params)
     }

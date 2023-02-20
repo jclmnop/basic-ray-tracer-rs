@@ -1,7 +1,7 @@
 use crate::shapes::Shape;
 use crate::{
-    Camera, Intersection, Matrix3x3, PixelColour, Ray, Sphere,
-    ARRAY_WIDTH, BYTES_PER_PIXEL,
+    Camera, Intersection, Matrix3x3, PixelColour, Ray, Sphere, ARRAY_WIDTH,
+    BYTES_PER_PIXEL,
 };
 use gtk::gdk_pixbuf::Pixbuf;
 use image::{ImageFormat, RgbaImage};

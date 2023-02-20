@@ -2,8 +2,8 @@ use env_logger::Builder;
 use gtk::gdk_pixbuf::{Colorspace, Pixbuf};
 use gtk::prelude::*;
 use ray_tracing::{
-    render, timeit, Camera, ColourChannel, Point, Sphere,
-    BURNT_ORANGE, IMG_SIZE, ZIMA_BLUE,
+    render, timeit, Camera, ColourChannel, Point, Sphere, BURNT_ORANGE,
+    IMG_SIZE, ZIMA_BLUE,
 };
 use relm4::{
     send, set_global_css_from_file, AppUpdate, Model, RelmApp, Sender,

@@ -19,25 +19,23 @@ pub const BURNT_ORANGE: PixelColour = PixelColour {
     z: 0,
 };
 
-const DEFAULT_AMBIENT_COEFFICIENT: f64 = 0.3;
-const DEFAULT_SPECULAR_COEFFICIENT: f64 = 1.0;
+const DEFAULT_SPECULAR_COEFFICIENT: f64 = 10.0;
 
 // TODO: move ambient coefficient to camera? or somewhere else
 #[derive(Copy, Clone)]
 pub struct Material {
-    ambient_coefficient: f64,
     specular_coefficient: f64,
+    specular_k: LightColour,
     pub colour: LightColour,
 }
 
 impl Material {
     pub fn new(
-        ambient_coefficient: f64,
         colour: LightColour,
         specular_coefficient: f64,
     ) -> Self {
         Self {
-            ambient_coefficient,
+            specular_k: LightColour::new(1.0, 1.0, 1.0),
             specular_coefficient,
             colour,
         }
@@ -49,20 +47,21 @@ impl Material {
         material
     }
 
+    pub fn specular_coefficient(&self) -> f64 {
+        self.specular_coefficient
+    }
+
+    pub fn specular_k(&self) -> LightColour {
+        // self.specular_k
+        self.colour
+    }
+
     pub fn ambient_k(&self, ambient_coefficient: f64) -> LightColour {
         self.colour * ambient_coefficient
     }
 
     pub fn colour(&self) -> LightColour {
         self.colour
-    }
-
-    pub fn specular_k(&self) -> LightColour {
-        self.colour * self.specular_coefficient
-    }
-
-    pub fn set_ambient_coefficient(&mut self, new_coefficient: f64) {
-        self.ambient_coefficient = new_coefficient;
     }
 
     pub fn set_colour(&mut self, new_colour: &PixelColour) {
@@ -92,8 +91,8 @@ impl Material {
 impl Default for Material {
     fn default() -> Self {
         Self {
+            specular_k: LightColour::new(1.0, 1.0, 1.0),
             specular_coefficient: DEFAULT_SPECULAR_COEFFICIENT,
-            ambient_coefficient: DEFAULT_AMBIENT_COEFFICIENT,
             colour: BURGUNDY.to_light_colour(),
         }
     }
