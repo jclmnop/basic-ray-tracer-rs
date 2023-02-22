@@ -45,6 +45,7 @@ pub fn main() {
         .unwrap(),
         current_index: 0,
         tracker: 0,
+        is_light_selected: false,
     };
     model.render();
     let app = RelmApp::new(model);
@@ -69,6 +70,7 @@ enum AppMsg {
     MoveY(f64),
     ResetCamera(RotationAxis),
     SetAmbient(f64),
+    SelectLight,
 }
 
 #[derive(Debug)]
@@ -94,6 +96,7 @@ struct AppModel {
     #[tracker::do_not_track]
     image: Pixbuf,
     current_index: usize,
+    is_light_selected: bool,
 }
 
 impl Model for AppModel {
@@ -127,27 +130,51 @@ impl AppUpdate for AppModel {
         match msg {
             AppMsg::ChangePosition(axis, v) => {
                 let i = self.current_index;
-                match axis {
-                    Axis::X => self.shapes[i].set_x(v),
-                    Axis::Y => self.shapes[i].set_y(v),
-                    Axis::Z => self.shapes[i].set_z(v),
+                if !self.is_light_selected {
+                    match axis {
+                        Axis::X => self.shapes[i].set_x(v),
+                        Axis::Y => self.shapes[i].set_y(v),
+                        Axis::Z => self.shapes[i].set_z(v),
+                    }
+                } else {
+                    match axis {
+                        Axis::X => self.camera.light_source.set_x(v),
+                        Axis::Y => self.camera.light_source.set_y(v),
+                        Axis::Z => self.camera.light_source.set_z(v),
+                    }
                 }
                 self.render();
             }
             AppMsg::AdjustRadius(delta) => {
                 let i = self.current_index;
-                self.shapes[i].adjust_radius(delta);
+                if !self.is_light_selected {
+                    self.shapes[i].adjust_radius(delta);
+                }
                 self.render();
             }
             AppMsg::ChangeColour(channel, new_colour) => {
                 let i = self.current_index;
                 // println!("{new_colour}");
-                self.shapes[i].set_colour_channel(&channel, new_colour as u8);
+                if !self.is_light_selected {
+                    self.shapes[i].set_colour_channel(&channel, new_colour as u8);
+                } else {
+                    self.camera.light_source.set_colour_channel(&channel, new_colour as u8);
+                }
                 self.render();
             }
             AppMsg::SelectSphere(index) => {
                 // println!("{index}");
-                self.set_current_index(index);
+                self.is_light_selected = false;
+                if self.current_index != index {
+                    self.set_current_index(index);
+                } else {
+                    self.tracker += 1;
+                }
+            }
+            AppMsg::SelectLight => {
+                println!("Light selected");
+                self.is_light_selected = true;
+                self.tracker += 1;
             }
             AppMsg::MoveX(x) => {
                 // println!("MoveX: {x}");
@@ -263,6 +290,13 @@ impl Widgets<AppModel, ()> for AppWidgets {
                                 send!(sender, AppMsg::SelectSphere(4));
                             }
                         },
+                        append = &gtk::CheckButton {
+                            set_label: Some("Light Source"),
+                            set_group: Some(&root_button),
+                            connect_toggled(sender) => move |_| {
+                                send!(sender, AppMsg::SelectLight);
+                            }
+                        },
                     },
                     append = &gtk::Separator::new(gtk::Orientation::Vertical) {
                         set_halign: gtk::Align::Center,
@@ -279,7 +313,11 @@ impl Widgets<AppModel, ()> for AppWidgets {
                                 set_range: args!(0.0, 255.0),
                                 set_value: track!(
                                     model.changed(AppModel::current_index()),
-                                    model.shapes[model.current_index].material.colour.x * 255.0
+                                    if !model.is_light_selected {
+                                        model.shapes[model.current_index].material.colour.x * 255.0
+                                    } else {
+                                        model.camera.light_source.colour.x * 255.0
+                                    }
                                 ),
                                 connect_value_changed[
                                     sender: Sender<AppMsg> = sender.clone(),
@@ -296,7 +334,11 @@ impl Widgets<AppModel, ()> for AppWidgets {
                                 set_range: args!(0.0, 255.0),
                                 set_value: track!(
                                     model.changed(AppModel::current_index()),
-                                    model.shapes[model.current_index].material.colour.y * 255.0
+                                    if !model.is_light_selected {
+                                        model.shapes[model.current_index].material.colour.y * 255.0
+                                    } else {
+                                        model.camera.light_source.colour.y * 255.0
+                                    }
                                 ),
                                 connect_value_changed[
                                     sender: Sender<AppMsg> = sender.clone(),
@@ -313,7 +355,11 @@ impl Widgets<AppModel, ()> for AppWidgets {
                                 set_range: args!(0.0, 255.0),
                                 set_value: track!(
                                     model.changed(AppModel::current_index()),
-                                    model.shapes[model.current_index].material.colour.z * 255.0
+                                    if !model.is_light_selected {
+                                        model.shapes[model.current_index].material.colour.z * 255.0
+                                    } else {
+                                        model.camera.light_source.colour.z * 255.0
+                                    }
                                 ),
                                 connect_value_changed[
                                     sender: Sender<AppMsg> = sender.clone(),
@@ -372,7 +418,12 @@ impl Widgets<AppModel, ()> for AppWidgets {
                             set_range: args!(LOWER_BOUND_POS, UPPER_BOUND_POS),
                             set_value: track!(
                                 model.changed(AppModel::current_index()),
-                                model.shapes[model.current_index].center.x
+                                if !model.is_light_selected {
+                                    model.shapes[model.current_index].center.x
+                                } else {
+                                    model.camera.light_source.position.x
+                                }
+                                // model.shapes[model.current_index].center.x
                             ),
                             connect_value_changed[
                                 sender: Sender<AppMsg> = sender.clone(),
@@ -395,7 +446,12 @@ impl Widgets<AppModel, ()> for AppWidgets {
                             set_range: args!(LOWER_BOUND_POS, UPPER_BOUND_POS),
                             set_value: track!(
                                 model.changed(AppModel::current_index()),
-                                model.shapes[model.current_index].center.y
+                                if !model.is_light_selected {
+                                    model.shapes[model.current_index].center.y
+                                } else {
+                                    model.camera.light_source.position.y
+                                }
+                                // model.shapes[model.current_index].center.y
                             ),
                             connect_value_changed[
                                 sender: Sender<AppMsg> = sender.clone(),
@@ -418,7 +474,12 @@ impl Widgets<AppModel, ()> for AppWidgets {
                             set_range: args!(LOWER_BOUND_POS, UPPER_BOUND_POS),
                             set_value: track!(
                                 model.changed(AppModel::current_index()),
-                                model.shapes[model.current_index].center.z
+                                if !model.is_light_selected {
+                                    model.shapes[model.current_index].center.z
+                                } else {
+                                    model.camera.light_source.position.z
+                                }
+                                // model.shapes[model.current_index].center.z
                             ),
                             connect_value_changed[
                                 sender: Sender<AppMsg> = sender.clone(),

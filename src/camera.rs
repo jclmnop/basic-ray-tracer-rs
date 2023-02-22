@@ -24,7 +24,7 @@ pub struct Camera {
     img_height: usize,
     img_width: usize,
     scale: f64,
-    light_source: LightSource,
+    pub light_source: LightSource,
     fov: f64,
     h_rotation: f64,
     v_rotation: f64,

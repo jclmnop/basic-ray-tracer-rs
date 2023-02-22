@@ -19,10 +19,11 @@ pub const BURNT_ORANGE: PixelColour = PixelColour {
 
 const DEFAULT_SPECULAR_COEFFICIENT: f64 = 10.0;
 
+#[allow(dead_code)]
 #[derive(Copy, Clone)]
 pub struct Material {
     specular_coefficient: f64,
-    specular_k: LightColour,
+    pub specular_k: LightColour,
     pub colour: LightColour,
 }
 

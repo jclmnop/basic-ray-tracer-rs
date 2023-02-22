@@ -16,6 +16,39 @@ impl Default for LightSource {
     }
 }
 
+impl LightSource {
+    pub fn set_x(&mut self, new_x: f64) {
+        self.position.x = new_x;
+    }
+
+    pub fn set_y(&mut self, new_y: f64) {
+        self.position.y = new_y;
+    }
+
+    pub fn set_z(&mut self, new_z: f64) {
+        self.position.z = new_z;
+    }
+
+    pub fn set_colour(&mut self, new_colour: &PixelColour) {
+        self.colour = new_colour.to_light_colour();
+    }
+
+    pub fn set_colour_channel(&mut self, channel: &ColourChannel, value: u8) {
+        let value: f64 = value as f64 / 255.0;
+        match channel {
+            ColourChannel::Red => {
+                self.colour.x = value;
+            }
+            ColourChannel::Green => {
+                self.colour.y = value;
+            }
+            ColourChannel::Blue => {
+                self.colour.z = value;
+            }
+        };
+    }
+}
+
 #[derive(Copy, Clone)]
 pub struct Ray {
     pub origin: Point,
