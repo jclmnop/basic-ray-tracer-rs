@@ -107,8 +107,6 @@ impl<T: VectorNum> Vector<T> {
     }
 }
 
-//TODO: u8 -> f64 for calculations more efficient?
-//      or f64 -> u8 for pixels more efficient?
 impl Vector<u8> {
     pub fn from_light_colour(light_colour: &LightColour) -> Self {
         PixelColour::from_array([

@@ -201,7 +201,7 @@ impl AppUpdate for AppModel {
 const UPPER_BOUND_POS: f64 = (IMG_SIZE as f64) / 2.0;
 const LOWER_BOUND_POS: f64 = -((IMG_SIZE as f64) / 2.0);
 
-// This is in abomination and should never be seen
+// This code is disgusting and should never be seen
 #[relm4::widget]
 impl Widgets<AppModel, ()> for AppWidgets {
     view! {

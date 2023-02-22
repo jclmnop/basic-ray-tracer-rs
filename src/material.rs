@@ -1,7 +1,5 @@
 use crate::{ColourChannel, LightColour, PixelColour};
 
-// TODO: specular lighting (optional)
-
 // Colours
 pub const ZIMA_BLUE: PixelColour = PixelColour {
     x: 26,
@@ -21,7 +19,6 @@ pub const BURNT_ORANGE: PixelColour = PixelColour {
 
 const DEFAULT_SPECULAR_COEFFICIENT: f64 = 10.0;
 
-// TODO: move ambient coefficient to camera? or somewhere else
 #[derive(Copy, Clone)]
 pub struct Material {
     specular_coefficient: f64,
