@@ -22,3 +22,7 @@ button:active {
   outline-offset: -2px;
   transform: scale(0.98);
 }
+
+/*.settings {*/
+/*  max-width: 500px;*/
+/*}*/

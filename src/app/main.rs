@@ -154,7 +154,6 @@ impl AppUpdate for AppModel {
             }
             AppMsg::ChangeColour(channel, new_colour) => {
                 let i = self.current_index;
-                // println!("{new_colour}");
                 if !self.is_light_selected {
                     self.shapes[i].set_colour_channel(&channel, new_colour as u8);
                 } else {
@@ -163,7 +162,6 @@ impl AppUpdate for AppModel {
                 self.render();
             }
             AppMsg::SelectSphere(index) => {
-                // println!("{index}");
                 self.is_light_selected = false;
                 if self.current_index != index {
                     self.set_current_index(index);
@@ -172,12 +170,10 @@ impl AppUpdate for AppModel {
                 }
             }
             AppMsg::SelectLight => {
-                println!("Light selected");
                 self.is_light_selected = true;
                 self.tracker += 1;
             }
             AppMsg::MoveX(x) => {
-                // println!("MoveX: {x}");
                 let camera_setup_time = timeit!({
                     self.camera.move_x(x);
                 })
@@ -190,7 +186,6 @@ impl AppUpdate for AppModel {
                 self.render();
             }
             AppMsg::MoveY(y) => {
-                // println!("MoveY: {y}");
                 let camera_setup_time = timeit!({
                     self.camera.move_y(y);
                 })
@@ -234,354 +229,381 @@ impl Widgets<AppModel, ()> for AppWidgets {
     view! {
         gtk::ApplicationWindow {
             set_title: Some("Ray Tracer"),
-            set_default_width: 800,
+            set_default_width: 1400,
             set_default_height: 1000,
             set_child = Some(&gtk::Box) {
-                set_orientation: gtk::Orientation::Vertical,
-                set_margin_all: 5,
-                set_spacing: 5,
+                set_orientation: gtk::Orientation::Horizontal,
+                // append = &gtk::Separator::new(gtk::Orientation::Vertical) {},
+                // set_margin_all: 20,
+                // set_spacing: 5,
+                append: settings = &gtk::Box {
+                    allocate: args!(400, 1000, -1, None),
+                    set_hexpand: false,
+                    set_orientation: gtk::Orientation::Vertical,
+                    // append = &gtk::Separator::new(gtk::Orientation::Horizontal) {},
+                    append = &gtk::Box {
+                        set_orientation: gtk::Orientation::Horizontal,
+                        // set_homogeneous: true,
+                        append: radio_buttons = &gtk::Box {
+                            set_orientation: gtk::Orientation::Vertical,
+                            set_margin_all: 10,
+                            set_spacing: 10,
 
-                append = &gtk::Picture {
-                    set_can_shrink: true,
+                            append: root_button = &gtk::CheckButton {
+                                set_label: Some("Sphere 1"),
+                                set_active: true,
+                                connect_toggled(sender) => move |_| {
+                                    send!(sender, AppMsg::SelectSphere(0));
+                                }
+                            },
+                            append = &gtk::CheckButton {
+                                set_label: Some("Sphere 2"),
+                                set_group: Some(&root_button),
+                                connect_toggled(sender) => move |_| {
+                                    send!(sender, AppMsg::SelectSphere(1));
+                                }
+                            },
+                            append = &gtk::CheckButton {
+                                set_label: Some("Sphere 3"),
+                                set_group: Some(&root_button),
+                                connect_toggled(sender) => move |_| {
+                                    send!(sender, AppMsg::SelectSphere(2));
+                                }
+                            },
+                            append = &gtk::CheckButton {
+                                set_label: Some("Sphere 4"),
+                                set_group: Some(&root_button),
+                                connect_toggled(sender) => move |_| {
+                                    send!(sender, AppMsg::SelectSphere(3));
+                                }
+                            },
+                            append = &gtk::CheckButton {
+                                set_label: Some("Sphere 5"),
+                                set_group: Some(&root_button),
+                                connect_toggled(sender) => move |_| {
+                                    send!(sender, AppMsg::SelectSphere(4));
+                                }
+                            },
+                            append = &gtk::CheckButton {
+                                set_label: Some("Light Source"),
+                                set_group: Some(&root_button),
+                                connect_toggled(sender) => move |_| {
+                                    send!(sender, AppMsg::SelectLight);
+                                }
+                            },
+                        },
+                        append = &gtk::Separator::new(gtk::Orientation::Vertical) {
+                            set_halign: gtk::Align::Center,
+                        },
+                        append: colour_sliders = &gtk::Box {
+                            set_orientation: gtk::Orientation::Horizontal,
+                            set_spacing: 10,
+                            set_valign: gtk::Align::Fill,
+
+                                append: red = &gtk::Scale {
+                                    set_orientation: gtk::Orientation::Vertical,
+                                    set_inverted: true,
+                                    set_valign: gtk::Align::Fill,
+                                    set_range: args!(0.0, 255.0),
+                                    set_value: track!(
+                                        model.changed(AppModel::current_index()),
+                                        if !model.is_light_selected {
+                                            model.shapes[model.current_index].material.colour.x * 255.0
+                                        } else {
+                                            model.camera.light_source.colour.x * 255.0
+                                        }
+                                    ),
+                                    connect_value_changed[
+                                        sender: Sender<AppMsg> = sender.clone(),
+                                    ] => move |s| {
+                                        let v = s.value();
+                                        send!(sender, AppMsg::ChangeColour(ColourChannel::Red, v));
+                                    }
+                                },
+
+                                append: green = &gtk::Scale {
+                                    set_orientation: gtk::Orientation::Vertical,
+                                    set_inverted: true,
+                                    set_valign: gtk::Align::Fill,
+                                    set_range: args!(0.0, 255.0),
+                                    set_value: track!(
+                                        model.changed(AppModel::current_index()),
+                                        if !model.is_light_selected {
+                                            model.shapes[model.current_index].material.colour.y * 255.0
+                                        } else {
+                                            model.camera.light_source.colour.y * 255.0
+                                        }
+                                    ),
+                                    connect_value_changed[
+                                        sender: Sender<AppMsg> = sender.clone(),
+                                    ] => move |s| {
+                                        let v = s.value();
+                                        send!(sender, AppMsg::ChangeColour(ColourChannel::Green, v));
+                                    }
+                                },
+
+                                append: blue = &gtk::Scale {
+                                    set_orientation: gtk::Orientation::Vertical,
+                                    set_inverted: true,
+                                    set_valign: gtk::Align::Fill,
+                                    set_range: args!(0.0, 255.0),
+                                    set_value: track!(
+                                        model.changed(AppModel::current_index()),
+                                        if !model.is_light_selected {
+                                            model.shapes[model.current_index].material.colour.z * 255.0
+                                        } else {
+                                            model.camera.light_source.colour.z * 255.0
+                                        }
+                                    ),
+                                    connect_value_changed[
+                                        sender: Sender<AppMsg> = sender.clone(),
+                                    ] => move |s| {
+                                        let v = s.value();
+                                        send!(sender, AppMsg::ChangeColour(ColourChannel::Blue, v));
+                                    }
+                                },
+                        },
+                        append = &gtk::Separator::new(gtk::Orientation::Vertical) {
+                            // set_halign: gtk::Align::Center,
+                        },
+                        append: radius_controls = &gtk::Box {
+                            set_halign: gtk::Align::Center,
+                            set_valign: gtk::Align::Center,
+                            // set_halign: gtk::Align::Fill,
+                            set_orientation: gtk::Orientation::Vertical,
+                            append = &gtk::Button {
+                                set_hexpand: true,
+                                set_label: "Bigger",
+                                connect_clicked(sender) => move |_| {
+                                    send!(sender, AppMsg::AdjustRadius(10.0));
+                                },
+                            },
+                            append = &gtk::Label {
+                                set_margin_all: 5,
+                                set_hexpand: true,
+                                set_label: watch! {
+                                    &format!(
+                                        "Radius: {}",
+                                        model.shapes[model.current_index].radius
+                                    )
+                                }
+                            },
+                            append = &gtk::Button {
+                                set_hexpand: true,
+                                set_label: "Smaller",
+                                connect_clicked(sender) => move |_| {
+                                    send!(sender, AppMsg::AdjustRadius(-10.0));
+                                },
+                            },
+                        },
+                    },
+                    append = &gtk::Separator::new(gtk::Orientation::Horizontal) {},
+                    append = &gtk::Label {
+                        set_margin_all: 5,
+                        set_halign: gtk::Align::Center,
+                        set_label: "Position Controls",
+                    },
+                    append = &gtk::Separator::new(gtk::Orientation::Horizontal) {},
+
+                    append: position_controls = &gtk::Box {
+                        set_orientation: gtk::Orientation::Vertical,
+                        set_halign: gtk::Align::Fill,
+                        append: x_box = &gtk::Box {
+                            set_orientation: gtk::Orientation::Vertical,
+                            set_halign: gtk::Align::Fill,
+
+                            append: x_label = &gtk::Label {
+                                set_halign: gtk::Align::Center,
+                                set_label: "X"
+                            },
+
+                            append: x_pos = &gtk::Scale {
+                                set_halign: gtk::Align::Fill,
+                                set_orientation: gtk::Orientation::Horizontal,
+                                set_draw_value: true,
+                                set_range: args!(LOWER_BOUND_POS, UPPER_BOUND_POS),
+                                set_value: track!(
+                                    model.changed(AppModel::current_index()),
+                                    if !model.is_light_selected {
+                                        model.shapes[model.current_index].center.x
+                                    } else {
+                                        model.camera.light_source.position.x
+                                    }
+                                    // model.shapes[model.current_index].center.x
+                                ),
+                                connect_value_changed[
+                                    sender: Sender<AppMsg> = sender.clone(),
+                                ] => move |s| {
+                                    let v = s.value();
+                                    send!(sender, AppMsg::ChangePosition(Axis::X, v));
+                                }
+                            },
+                        },
+                        append: y_box = &gtk::Box {
+                            set_orientation: gtk::Orientation::Vertical,
+
+                            append: y_label = &gtk::Label {
+                                set_halign: gtk::Align::Center,
+                                set_label: "Y"
+                            },
+                            append: y_pos = &gtk::Scale {
+                                set_orientation: gtk::Orientation::Horizontal,
+                                set_draw_value: true,
+                                set_range: args!(LOWER_BOUND_POS, UPPER_BOUND_POS),
+                                set_value: track!(
+                                    model.changed(AppModel::current_index()),
+                                    if !model.is_light_selected {
+                                        model.shapes[model.current_index].center.y
+                                    } else {
+                                        model.camera.light_source.position.y
+                                    }
+                                    // model.shapes[model.current_index].center.y
+                                ),
+                                connect_value_changed[
+                                    sender: Sender<AppMsg> = sender.clone(),
+                                ] => move |s| {
+                                    let v = s.value();
+                                    send!(sender, AppMsg::ChangePosition(Axis::Y, v));
+                                }
+                            },
+                        },
+                        append: z_box = &gtk::Box {
+                            set_orientation: gtk::Orientation::Vertical,
+
+                            append: z_label = &gtk::Label {
+                                set_halign: gtk::Align::Center,
+                                set_label: "Z"
+                            },
+                            append: z_pos = &gtk::Scale {
+                                set_orientation: gtk::Orientation::Horizontal,
+                                set_draw_value: true,
+                                set_range: args!(LOWER_BOUND_POS, UPPER_BOUND_POS),
+                                set_value: track!(
+                                    model.changed(AppModel::current_index()),
+                                    if !model.is_light_selected {
+                                        model.shapes[model.current_index].center.z
+                                    } else {
+                                        model.camera.light_source.position.z
+                                    }
+                                    // model.shapes[model.current_index].center.z
+                                ),
+                                connect_value_changed[
+                                    sender: Sender<AppMsg> = sender.clone(),
+                                ] => move |s| {
+                                    let v = s.value();
+                                    send!(sender, AppMsg::ChangePosition(Axis::Z, v));
+                                }
+                            },
+                        },
+                    },
+
+                    append = &gtk::Separator::new(gtk::Orientation::Horizontal) {},
+                    append = &gtk::Label {
+                        set_margin_all: 5,
+                        set_halign: gtk::Align::Center,
+                        set_label: "Camera Controls",
+                    },
+                    append = &gtk::Separator::new(gtk::Orientation::Horizontal) {},
+                    append: camera_controls = &gtk::Box {
+                        set_orientation: gtk::Orientation::Vertical,
+                        set_halign: gtk::Align::Center,
+                        append: vertical_controls = &gtk::Scale {
+                            set_orientation: gtk::Orientation::Vertical,
+                            set_range: args!(-10.0, 10.0),
+                            set_increments: args!(1.0, 1.0),
+                            // set_slider_size_fixed: true,
+                            set_inverted: true,
+                            set_size_request: args!(-1, 100),
+                            connect_value_changed(sender) => move |s| {
+                                let v = s.value();
+                                if v != 0.0 {
+                                    send!(sender, AppMsg::MoveY(v));
+                                    s.set_value(0.0);
+                                }
+                            },
+                        },
+                        append: horizontal_controls = &gtk::Scale {
+                            set_orientation: gtk::Orientation::Horizontal,
+                            set_range: args!(-10.0, 10.0),
+                            set_increments: args!(1.0, 1.0),
+                            // set_slider_size_fixed: true,
+                            set_size_request: args!(100, -1),
+                            set_inverted: true,
+                            connect_value_changed(sender) => move |s| {
+                                let v = s.value();
+                                if v != 0.0 {
+                                    send!(sender, AppMsg::MoveX(v));
+                                    s.set_value(0.0);
+                                }
+                            },
+                        },
+                    },
+
+                    append = &gtk::Label {
+                        set_margin_all: 5,
+                        set_label: watch! {
+                            &format!(
+                                "Camera Coords ({:.0}, {:.0}, {:.0})\nRotation: ({:.0}, {:.0})",
+                                model.camera.vrp().x,
+                                model.camera.vrp().y,
+                                model.camera.vrp().z,
+                                model.camera.h_rotation(),
+                                model.camera.v_rotation(),
+                            )
+                        }
+                    },
+                    append: reset_buttons = &gtk::Box {
+                        set_halign: gtk::Align::Center,
+                        set_orientation: gtk::Orientation::Horizontal,
+                        append = &gtk::Button {
+                            set_label: "Reset Vertical",
+                            connect_clicked(sender) => move |_| {
+                                send!(sender, AppMsg::ResetCamera(RotationAxis::Vertical));
+                            },
+                        },
+                        append = &gtk::Button {
+                            set_label: "Reset Horizontal",
+                            connect_clicked(sender) => move |_| {
+                                send!(sender, AppMsg::ResetCamera(RotationAxis::Horizontal));
+                            },
+                        },
+                        append = &gtk::Button {
+                            set_label: "Reset Both",
+                            connect_clicked(sender) => move |_| {
+                                send!(sender, AppMsg::ResetCamera(RotationAxis::Both));
+                            },
+                        },
+                    },
+
+                    append = &gtk::Separator::new(gtk::Orientation::Horizontal) {},
+                    append = &gtk::Label {
+                        set_margin_all: 5,
+                        set_halign: gtk::Align::Center,
+                        set_label: "Ambient Light",
+                    },
+                    append = &gtk::Separator::new(gtk::Orientation::Horizontal) {},
+
+                    append: ambient_controls = &gtk::Scale {
+                        set_orientation: gtk::Orientation::Horizontal,
+                        set_range: args!(0.0, 1.0),
+                        set_increments: args!(0.01, 0.01),
+                        // set_slider_size_fixed: true,
+                        set_value: model.camera.ambient_coefficient(),
+                        // set_size_request: args!(100, -1),
+                        connect_value_changed(sender) => move |s| {
+                            let v = s.value();
+                            send!(sender, AppMsg::SetAmbient(v));
+                        },
+                    },
+                },
+                append = &gtk::Separator::new(gtk::Orientation::Vertical) {},
+                append: img = &gtk::Picture {
+                    set_can_shrink: false,
+                    // set_size_request: args!(1000, 1000),
 
                     set_pixbuf: watch! {Some(&model.image)},
                 },
-                append = &gtk::Separator::new(gtk::Orientation::Horizontal) {},
-                append: settings = &gtk::Box {
-                    set_orientation: gtk::Orientation::Horizontal,
-                    set_homogeneous: true,
-                    append: radio_buttons = &gtk::Box {
-                        set_orientation: gtk::Orientation::Vertical,
-                        set_margin_all: 10,
-                        set_spacing: 10,
 
-                        append: root_button = &gtk::CheckButton {
-                            set_label: Some("Sphere 1"),
-                            set_active: true,
-                            connect_toggled(sender) => move |_| {
-                                send!(sender, AppMsg::SelectSphere(0));
-                            }
-                        },
-                        append = &gtk::CheckButton {
-                            set_label: Some("Sphere 2"),
-                            set_group: Some(&root_button),
-                            connect_toggled(sender) => move |_| {
-                                send!(sender, AppMsg::SelectSphere(1));
-                            }
-                        },
-                        append = &gtk::CheckButton {
-                            set_label: Some("Sphere 3"),
-                            set_group: Some(&root_button),
-                            connect_toggled(sender) => move |_| {
-                                send!(sender, AppMsg::SelectSphere(2));
-                            }
-                        },
-                        append = &gtk::CheckButton {
-                            set_label: Some("Sphere 4"),
-                            set_group: Some(&root_button),
-                            connect_toggled(sender) => move |_| {
-                                send!(sender, AppMsg::SelectSphere(3));
-                            }
-                        },
-                        append = &gtk::CheckButton {
-                            set_label: Some("Sphere 5"),
-                            set_group: Some(&root_button),
-                            connect_toggled(sender) => move |_| {
-                                send!(sender, AppMsg::SelectSphere(4));
-                            }
-                        },
-                        append = &gtk::CheckButton {
-                            set_label: Some("Light Source"),
-                            set_group: Some(&root_button),
-                            connect_toggled(sender) => move |_| {
-                                send!(sender, AppMsg::SelectLight);
-                            }
-                        },
-                    },
-                    append = &gtk::Separator::new(gtk::Orientation::Vertical) {
-                        set_halign: gtk::Align::Center,
-                    },
-                    append: colour_sliders = &gtk::Box {
-                        set_orientation: gtk::Orientation::Horizontal,
-                        set_spacing: 10,
-                        set_valign: gtk::Align::Fill,
-
-                            append: red = &gtk::Scale {
-                                set_orientation: gtk::Orientation::Vertical,
-                                set_inverted: true,
-                                set_valign: gtk::Align::Fill,
-                                set_range: args!(0.0, 255.0),
-                                set_value: track!(
-                                    model.changed(AppModel::current_index()),
-                                    if !model.is_light_selected {
-                                        model.shapes[model.current_index].material.colour.x * 255.0
-                                    } else {
-                                        model.camera.light_source.colour.x * 255.0
-                                    }
-                                ),
-                                connect_value_changed[
-                                    sender: Sender<AppMsg> = sender.clone(),
-                                ] => move |s| {
-                                    let v = s.value();
-                                    send!(sender, AppMsg::ChangeColour(ColourChannel::Red, v));
-                                }
-                            },
-
-                            append: green = &gtk::Scale {
-                                set_orientation: gtk::Orientation::Vertical,
-                                set_inverted: true,
-                                set_valign: gtk::Align::Fill,
-                                set_range: args!(0.0, 255.0),
-                                set_value: track!(
-                                    model.changed(AppModel::current_index()),
-                                    if !model.is_light_selected {
-                                        model.shapes[model.current_index].material.colour.y * 255.0
-                                    } else {
-                                        model.camera.light_source.colour.y * 255.0
-                                    }
-                                ),
-                                connect_value_changed[
-                                    sender: Sender<AppMsg> = sender.clone(),
-                                ] => move |s| {
-                                    let v = s.value();
-                                    send!(sender, AppMsg::ChangeColour(ColourChannel::Green, v));
-                                }
-                            },
-
-                            append: blue = &gtk::Scale {
-                                set_orientation: gtk::Orientation::Vertical,
-                                set_inverted: true,
-                                set_valign: gtk::Align::Fill,
-                                set_range: args!(0.0, 255.0),
-                                set_value: track!(
-                                    model.changed(AppModel::current_index()),
-                                    if !model.is_light_selected {
-                                        model.shapes[model.current_index].material.colour.z * 255.0
-                                    } else {
-                                        model.camera.light_source.colour.z * 255.0
-                                    }
-                                ),
-                                connect_value_changed[
-                                    sender: Sender<AppMsg> = sender.clone(),
-                                ] => move |s| {
-                                    let v = s.value();
-                                    send!(sender, AppMsg::ChangeColour(ColourChannel::Blue, v));
-                                }
-                            },
-                    },
-                    append = &gtk::Separator::new(gtk::Orientation::Vertical) {
-                        set_halign: gtk::Align::Center,
-                    },
-                    append: radius_controls = &gtk::Box {
-                        set_orientation: gtk::Orientation::Vertical,
-                        append = &gtk::Button {
-                            set_label: "Bigger",
-                            connect_clicked(sender) => move |_| {
-                                send!(sender, AppMsg::AdjustRadius(10.0));
-                            },
-                        },
-                        append = &gtk::Label {
-                            set_margin_all: 5,
-                            set_label: watch! {
-                                &format!(
-                                    "Radius: {}",
-                                    model.shapes[model.current_index].radius
-                                )
-                            }
-                        },
-                        append = &gtk::Button {
-                            set_label: "Smaller",
-                            connect_clicked(sender) => move |_| {
-                                send!(sender, AppMsg::AdjustRadius(-10.0));
-                            },
-                        },
-                    },
-                },
-                append = &gtk::Separator::new(gtk::Orientation::Horizontal) {},
-
-                append: position_controls = &gtk::Box {
-                    set_orientation: gtk::Orientation::Vertical,
-                    set_halign: gtk::Align::Fill,
-                    append: x_box = &gtk::Box {
-                        set_orientation: gtk::Orientation::Vertical,
-                        set_halign: gtk::Align::Fill,
-
-                        append: x_label = &gtk::Label {
-                            set_halign: gtk::Align::Center,
-                            set_label: "X"
-                        },
-
-                        append: x_pos = &gtk::Scale {
-                            set_halign: gtk::Align::Fill,
-                            set_orientation: gtk::Orientation::Horizontal,
-                            set_draw_value: true,
-                            set_range: args!(LOWER_BOUND_POS, UPPER_BOUND_POS),
-                            set_value: track!(
-                                model.changed(AppModel::current_index()),
-                                if !model.is_light_selected {
-                                    model.shapes[model.current_index].center.x
-                                } else {
-                                    model.camera.light_source.position.x
-                                }
-                                // model.shapes[model.current_index].center.x
-                            ),
-                            connect_value_changed[
-                                sender: Sender<AppMsg> = sender.clone(),
-                            ] => move |s| {
-                                let v = s.value();
-                                send!(sender, AppMsg::ChangePosition(Axis::X, v));
-                            }
-                        },
-                    },
-                    append: y_box = &gtk::Box {
-                        set_orientation: gtk::Orientation::Vertical,
-
-                        append: y_label = &gtk::Label {
-                            set_halign: gtk::Align::Center,
-                            set_label: "Y"
-                        },
-                        append: y_pos = &gtk::Scale {
-                            set_orientation: gtk::Orientation::Horizontal,
-                            set_draw_value: true,
-                            set_range: args!(LOWER_BOUND_POS, UPPER_BOUND_POS),
-                            set_value: track!(
-                                model.changed(AppModel::current_index()),
-                                if !model.is_light_selected {
-                                    model.shapes[model.current_index].center.y
-                                } else {
-                                    model.camera.light_source.position.y
-                                }
-                                // model.shapes[model.current_index].center.y
-                            ),
-                            connect_value_changed[
-                                sender: Sender<AppMsg> = sender.clone(),
-                            ] => move |s| {
-                                let v = s.value();
-                                send!(sender, AppMsg::ChangePosition(Axis::Y, v));
-                            }
-                        },
-                    },
-                    append: z_box = &gtk::Box {
-                        set_orientation: gtk::Orientation::Vertical,
-
-                        append: z_label = &gtk::Label {
-                            set_halign: gtk::Align::Center,
-                            set_label: "Z"
-                        },
-                        append: z_pos = &gtk::Scale {
-                            set_orientation: gtk::Orientation::Horizontal,
-                            set_draw_value: true,
-                            set_range: args!(LOWER_BOUND_POS, UPPER_BOUND_POS),
-                            set_value: track!(
-                                model.changed(AppModel::current_index()),
-                                if !model.is_light_selected {
-                                    model.shapes[model.current_index].center.z
-                                } else {
-                                    model.camera.light_source.position.z
-                                }
-                                // model.shapes[model.current_index].center.z
-                            ),
-                            connect_value_changed[
-                                sender: Sender<AppMsg> = sender.clone(),
-                            ] => move |s| {
-                                let v = s.value();
-                                send!(sender, AppMsg::ChangePosition(Axis::Z, v));
-                            }
-                        },
-                    },
-                },
-
-                append = &gtk::Separator::new(gtk::Orientation::Horizontal) {},
-                append: camera_controls = &gtk::Box {
-                    set_orientation: gtk::Orientation::Vertical,
-                    set_halign: gtk::Align::Center,
-                    append: vertical_controls = &gtk::Scale {
-                        set_orientation: gtk::Orientation::Vertical,
-                        set_range: args!(-10.0, 10.0),
-                        set_increments: args!(1.0, 1.0),
-                        // set_slider_size_fixed: true,
-                        set_inverted: true,
-                        set_size_request: args!(-1, 100),
-                        connect_value_changed(sender) => move |s| {
-                            let v = s.value();
-                            if v != 0.0 {
-                                send!(sender, AppMsg::MoveY(v));
-                                s.set_value(0.0);
-                            }
-                        },
-                    },
-                    append: horizontal_controls = &gtk::Scale {
-                        set_orientation: gtk::Orientation::Horizontal,
-                        set_range: args!(-10.0, 10.0),
-                        set_increments: args!(1.0, 1.0),
-                        // set_slider_size_fixed: true,
-                        set_size_request: args!(100, -1),
-                        set_inverted: true,
-                        connect_value_changed(sender) => move |s| {
-                            let v = s.value();
-                            if v != 0.0 {
-                                send!(sender, AppMsg::MoveX(v));
-                                s.set_value(0.0);
-                            }
-                        },
-                    },
-                },
-
-                append = &gtk::Label {
-                    set_margin_all: 5,
-                    set_label: watch! {
-                        &format!(
-                            "Camera Coords ({:.0}, {:.0}, {:.0})\nRotation: ({:.0}, {:.0})",
-                            model.camera.vrp().x,
-                            model.camera.vrp().y,
-                            model.camera.vrp().z,
-                            model.camera.h_rotation(),
-                            model.camera.v_rotation(),
-                        )
-                    }
-                },
-                append: reset_buttons = &gtk::Box {
-                    set_halign: gtk::Align::Center,
-                    set_orientation: gtk::Orientation::Horizontal,
-                    append = &gtk::Button {
-                        set_label: "Reset Vertical",
-                        connect_clicked(sender) => move |_| {
-                            send!(sender, AppMsg::ResetCamera(RotationAxis::Vertical));
-                        },
-                    },
-                    append = &gtk::Button {
-                        set_label: "Reset Horizontal",
-                        connect_clicked(sender) => move |_| {
-                            send!(sender, AppMsg::ResetCamera(RotationAxis::Horizontal));
-                        },
-                    },
-                    append = &gtk::Button {
-                        set_label: "Reset Both",
-                        connect_clicked(sender) => move |_| {
-                            send!(sender, AppMsg::ResetCamera(RotationAxis::Both));
-                        },
-                    },
-                },
-                append = &gtk::Separator::new(gtk::Orientation::Horizontal) {},
-                append = &gtk::Label {
-                    set_margin_all: 5,
-                    set_halign: gtk::Align::Center,
-                    set_label: "Ambient Light",
-                },
-
-                append = &gtk::Separator::new(gtk::Orientation::Horizontal) {},
-                append: ambient_controls = &gtk::Scale {
-                    set_orientation: gtk::Orientation::Horizontal,
-                    set_range: args!(0.0, 1.0),
-                    set_increments: args!(0.01, 0.01),
-                    // set_slider_size_fixed: true,
-                    set_value: model.camera.ambient_coefficient(),
-                    // set_size_request: args!(100, -1),
-                    connect_value_changed(sender) => move |s| {
-                        let v = s.value();
-                        send!(sender, AppMsg::SetAmbient(v));
-                    },
-                },
             }
         }
     }
